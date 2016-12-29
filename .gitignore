@@ -1,0 +1,7 @@
+sandbox
+*.o
+*.d
+*~
+*#
+buildMode
+.clang_complete
