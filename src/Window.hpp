@@ -2,6 +2,7 @@
 #define DMP_WINDOW_HPP
 
 #include <functional>
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
 namespace dmp

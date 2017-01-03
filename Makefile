@@ -6,8 +6,10 @@ SRC_DIR = src
 RES_DIR = res
 SHADER_DIR = $(RES_DIR)/shaders
 
-CXX_FLAGS = -g -Wall -Wconversion -std=c++14 -Ofast -MD -MP $(BUILD_MODE)
+CXX_FLAGS = -g -Wall -Wconversion -std=c++14 -Ofast -MD -MP $(BUILD_MODE) $(LIB_DEFINES)
 CXX = g++
+
+LIB_DEFINES = $(GLM_DEFINES)
 
 OBJ_FILES = main.o Window.o Renderer.o Shader.o
 
@@ -93,3 +95,4 @@ endef
 # ----------------------------------------------------------
 
 -include buildMode
+-include glmDefines

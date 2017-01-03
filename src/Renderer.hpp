@@ -1,6 +1,9 @@
 #ifndef DMP_RENDERER_HPP
 #define DMP_RENDERER_HPP
 
+#include <GL/glew.h>
+#include <glm/glm.hpp>
+
 namespace dmp
 {
   class Renderer
@@ -13,8 +16,11 @@ namespace dmp
     Renderer & operator=(Renderer && other) = default;
 
     Renderer();
+    void resize(GLsizei width, GLsizei height);
   private:
     void initRenderer();
+
+    glm::mat4 mP;
   };
 };
 

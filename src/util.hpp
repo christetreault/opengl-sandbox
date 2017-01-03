@@ -7,6 +7,7 @@
 #include <functional>
 #include <algorithm>
 #include <limits>
+#include <GL/glew.h>
 
 // Exectue a statement IFF built in release mode (NDEBUG is definend)
 // define ifRelease
@@ -85,6 +86,11 @@ namespace dmp
                          + std::to_string(line));
     }
 
+    InvariantViolation(std::string msg)
+    {
+      mMsg = msg;
+    }
+
     const char * what() const noexcept
     {
       return mMsg.c_str();
@@ -147,6 +153,63 @@ namespace dmp
       }
 
     return false;
+  }
+
+  //queries all opengl errors. Blows up if there are any errors.
+  void expectNoErrors()
+  {
+    std::vector<std::string>  msgs(0);
+    for (GLenum err; (err = glGetError()) != GL_NO_ERROR;)
+      {
+        switch(err)
+          {
+          case GL_NO_ERROR:
+            unreachable("GL_NO_ERROR encountered in expectNoErrors loop!");
+            break;
+          case GL_INVALID_ENUM:
+            msgs.push_back("GL_INVALID_ENUM");
+            break;
+          case GL_INVALID_VALUE:
+            msgs.push_back("GL_INVALID_VALUE");
+            break;
+          case GL_INVALID_OPERATION:
+            msgs.push_back("GL_INVALID_OPERATION");
+            break;
+          case GL_STACK_OVERFLOW:
+            msgs.push_back("GL_STACK_OVERFLOW");
+            break;
+          case GL_STACK_UNDERFLOW:
+            msgs.push_back("GL_STACK_UNDERFLOW");
+            break;
+          case GL_OUT_OF_MEMORY:
+            msgs.push_back("GL_OUT_OF_MEMORY");
+            break;
+          case GL_INVALID_FRAMEBUFFER_OPERATION:
+            msgs.push_back("GL_INVALID_FRAMEBUFFER_OPERATION");
+            break;
+          case GL_CONTEXT_LOST:
+            msgs.push_back("GL_CONTEXT_LOST");
+            break;
+          case GL_TABLE_TOO_LARGE:
+            msgs.push_back("GL_TABLE_TOO_LARGE");
+            break;
+          default:
+            std::string unkErr = "Unknown OpenGL error type occurred: ";
+            unkErr = unkErr + std::to_string(err);
+            msgs.push_back(unkErr);
+          }
+      }
+
+    if (msgs.size() == 0) return;
+
+    std::string msg = "OpenGL error(s) occurred: \n";
+    for (const auto & curr : msgs)
+      {
+        msg += curr;
+        msg += "\n";
+      }
+
+    throw dmp::InvariantViolation(msg);
   }
 }
 
