@@ -3,8 +3,15 @@
 #include <set>
 #include <algorithm>
 #include <iostream>
+#include <glm/gtc/matrix_transform.hpp>
 #include "util.hpp"
 #include "config.hpp"
+
+dmp::Renderer::Renderer(GLsizei width, GLsizei height)
+{
+  initRenderer();
+  resize(width, height);
+}
 
 void dmp::Renderer::initRenderer()
 {
@@ -25,7 +32,12 @@ void dmp::Renderer::initRenderer()
 
 void dmp::Renderer::resize(GLsizei width, GLsizei height)
 {
+  float fWidth = (float) width;
+  float fHeight = (float) height;
   glViewport(0, 0, width, height);
 
-  mP = glm::
+  mP = glm::perspective(fieldOfView,
+                        fWidth / fHeight,
+                        0.1f,
+                        1000.0f);
 }

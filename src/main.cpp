@@ -1,18 +1,18 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
-#include "Window.hpp"
-#include "Renderer.hpp"
+#include "Program.hpp"
 #include "util.hpp"
 
-
-static void errorCb(int error, const char * description)
+static void libsInit()
 {
-  std::cerr << "GLFW Error "
-            << error
-            << ": "
-            << description
-            << std::endl;
+  expect("GLFW init failed!",
+         glfwInit());
+}
+
+static void libsFinalize()
+{
+  glfwTerminate();
 }
 
 int main(int, char **)
@@ -22,37 +22,18 @@ int main(int, char **)
   ifDebug(std::cerr << "Built in debug mode..." << std::endl);
   ifRelease(std::cerr << "Built in release mode..." << std::endl);
 
+  int exitCode = EXIT_SUCCESS;
+
   try
     {
-      expect("GLFW init failed!",
-             glfwInit());
+      libsInit();
 
       int width = 512;
       int height = 512;
-      Window win(width, height, "Petting a cat's tummy is dangerous,"
-                 "but nothing ventured nothing gained");
-      win.keyFn = [](GLFWwindow * w,
-                     int key,
-                     int scancode,
-                     int action,
-                     int mods)
-        {
-          if (action == GLFW_PRESS)
-            {
-              switch (key)
-                {
-                case GLFW_KEY_ESCAPE:
-                glfwSetWindowShouldClose(w, true);
-                break;
-                }
-            }
-        };
-      glfwSetErrorCallback(errorCb);
+      Program p(width, height, "Petting a cat's tummy is dangerous,"
+                "but nothing ventured nothing gained");
 
-      while (!win.shouldClose())
-        {
-          glfwPollEvents();
-        }
+      exitCode = p.run();
     }
   catch (dmp::InvariantViolation & e)
     {
@@ -64,7 +45,10 @@ int main(int, char **)
                 << std::endl
                 << "--------------------------------------------------------------------------------"
                 << std::endl;
+
+      exitCode = EXIT_FAILURE;
     }
-  glfwTerminate();
-  return EXIT_SUCCESS;
+
+  libsFinalize();
+  return exitCode;
 }

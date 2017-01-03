@@ -15,7 +15,7 @@ namespace dmp
     Renderer(Renderer && other) = default;
     Renderer & operator=(Renderer && other) = default;
 
-    Renderer();
+    Renderer(GLsizei width, GLsizei height);
     void resize(GLsizei width, GLsizei height);
   private:
     void initRenderer();

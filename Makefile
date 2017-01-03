@@ -6,12 +6,14 @@ SRC_DIR = src
 RES_DIR = res
 SHADER_DIR = $(RES_DIR)/shaders
 
-CXX_FLAGS = -g -Wall -Wconversion -std=c++14 -Ofast -MD -MP $(BUILD_MODE) $(LIB_DEFINES)
 CXX = g++
+CXX_FLAGS = -g -Wall -Wconversion -std=c++14 -Ofast -MD -MP \
+$(BUILD_MODE_FLAGS) $(LIB_DEFINES)
+
 
 LIB_DEFINES = $(GLM_DEFINES)
 
-OBJ_FILES = main.o Window.o Renderer.o Shader.o
+OBJ_FILES = main.o Window.o Renderer.o Shader.o Program.o Timer.o
 
 PKG_CONFIG_LIBS = glfw3 Magick++ gl glew
 MANUAL_LIBS =
@@ -29,14 +31,16 @@ all : build
 
 debug : clean
 	$(call padEcho,Reconfiguring for debug mode...)
-	$(file >buildMode,BUILD_MODE =)
+	$(file >buildMode,BUILD_MODE_FLAGS =)
+	$(file >>buildMode,BUILD_MODE = Debug)
 
 release : clean
 	  $(call padEcho,Reconfiguring for release mode...)
-	  $(file >buildMode,BUILD_MODE = -DNDEBUG)
+	  $(file >buildMode,BUILD_MODE_FLAGS = -DNDEBUG)
+	  $(file >>buildMode,BUILD_MODE = Release)
 
 build : $(OBJ_FILES)
-	$(call padEcho,linking $(PROG_NAME) in release mode...)
+	$(call padEcho,linking $(PROG_NAME) in $(BUILD_MODE) mode...)
 	$(CXX) -o $(PROG_NAME) $(OBJ_FILES) $(CXX_FLAGS) $(INCLUDE) $(LIBS)
 	$(call padEcho,done!)
 
@@ -51,6 +55,12 @@ Renderer.o : $(SRC_DIR)/Renderer.cpp $(SRC_DIR)/Renderer.hpp
 
 Shader.o : $(SRC_DIR)/Renderer/Shader.cpp $(SRC_DIR)/Renderer/Shader.hpp
 	   $(call compile,Renderer/Shader.cpp)
+
+Program.o : $(SRC_DIR)/Program.cpp $(SRC_DIR)/Program.hpp
+	    $(call compile,Program.cpp)
+
+Timer.o : $(SRC_DIR)/Timer.cpp $(SRC_DIR)/Timer.hpp
+	  $(call compile,Timer.cpp)
 
 
 rebuild : clean build

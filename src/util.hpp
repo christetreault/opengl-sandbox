@@ -156,7 +156,7 @@ namespace dmp
   }
 
   //queries all opengl errors. Blows up if there are any errors.
-  void expectNoErrors()
+  inline void expectNoErrors()
   {
     std::vector<std::string>  msgs(0);
     for (GLenum err; (err = glGetError()) != GL_NO_ERROR;)
