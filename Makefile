@@ -13,7 +13,7 @@ $(BUILD_MODE_FLAGS) $(LIB_DEFINES)
 
 LIB_DEFINES = $(GLM_DEFINES)
 
-OBJ_FILES = main.o Window.o Renderer.o Shader.o Program.o Timer.o
+OBJ_FILES = main.o Window.o Renderer.o Shader.o Program.o Timer.o Object.o
 
 PKG_CONFIG_LIBS = glfw3 Magick++ gl glew
 MANUAL_LIBS =
@@ -61,6 +61,9 @@ Program.o : $(SRC_DIR)/Program.cpp $(SRC_DIR)/Program.hpp
 
 Timer.o : $(SRC_DIR)/Timer.cpp $(SRC_DIR)/Timer.hpp
 	  $(call compile,Timer.cpp)
+
+Object.o : $(SRC_DIR)/Scene/Object.cpp $(SRC_DIR)/Scene/Object.hpp
+	   $(call compile,Scene/Object.cpp)
 
 
 rebuild : clean build

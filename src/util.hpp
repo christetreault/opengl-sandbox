@@ -156,9 +156,11 @@ namespace dmp
   }
 
   //queries all opengl errors. Blows up if there are any errors.
-  inline void expectNoErrors()
+  inline void expectNoErrors(std::string header = "")
   {
-    std::vector<std::string>  msgs(0);
+    ifRelease(return);
+
+    std::vector<std::string>  msgs = {"Attempting: " + header + "\n"};;
     for (GLenum err; (err = glGetError()) != GL_NO_ERROR;)
       {
         switch(err)
@@ -200,7 +202,7 @@ namespace dmp
           }
       }
 
-    if (msgs.size() == 0) return;
+    if (msgs.size() == 1) return;
 
     std::string msg = "OpenGL error(s) occurred: \n";
     for (const auto & curr : msgs)
