@@ -18,6 +18,14 @@ namespace dmp
     glm::vec4 color;
     glm::vec4 dir;
   };
+
+  struct Camera
+  {
+    glm::vec4 pos;
+    glm::vec4 up;
+    glm::vec4 focus;
+    glm::mat4 V;
+  };
 }
 
 #endif

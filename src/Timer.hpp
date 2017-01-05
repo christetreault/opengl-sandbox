@@ -27,6 +27,8 @@ namespace dmp
     void unpause();
     void pause();
     void tick();
+
+    bool isPaused() {return mPaused;}
   private:
     TimePoint mBaseTime;
     TimePoint mPausedTime;

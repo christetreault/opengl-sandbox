@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <string>
 #include "util.hpp"
 
 void dmp::Window::initCallbacks()
@@ -40,6 +41,7 @@ dmp::Window::Window(int width,
                     int height,
                     const char * title)
 {
+  mTitle = title;
   auto working = glfwCreateWindow(width, height, title, nullptr, nullptr);
 
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -63,4 +65,16 @@ dmp::Window::Window(int width,
 dmp::Window::~Window()
 {
   glfwDestroyWindow(mWindow);
+  mWindow = nullptr; // sure, why not?
+}
+
+void dmp::Window::updateFPS(size_t fps)
+{
+  expect("update FPS", mWindow != nullptr);
+
+  mFPS = fps;
+  std::string title = mTitle
+    + std::string(" : FPS = ")
+    + std::to_string(mFPS);
+  glfwSetWindowTitle(mWindow, title.c_str());
 }

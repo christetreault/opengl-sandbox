@@ -18,6 +18,9 @@ namespace dmp
     operator GLFWwindow *() {return mWindow;}
 
     void swapBuffer() {glfwSwapBuffers(mWindow);}
+    void pollEvents() {glfwPollEvents();}
+
+    void updateFPS(size_t fps);
 
     // Input
     std::function<void(GLFWwindow *, int, int, int)> mouseButtonFn;
@@ -36,7 +39,9 @@ namespace dmp
     std::function<void(GLFWwindow *, int, int)> windowFrameBufferResizeFn;
 
   private:
-    GLFWwindow * mWindow;
+    GLFWwindow * mWindow = nullptr;
+    const char * mTitle = "";
+    size_t mFPS = 0;
 
     void initCallbacks();
 

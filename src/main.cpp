@@ -28,8 +28,8 @@ int main(int, char **)
     {
       libsInit();
 
-      int width = 512;
-      int height = 512;
+      int width = 1280;
+      int height = 720;
       Program p(width, height, "Petting a cat's tummy is dangerous,"
                 "but nothing ventured nothing gained");
 

@@ -33,7 +33,6 @@ void dmp::Object::initObject(std::vector<ObjectVertex> * verts,
   if (mHasIndices) glGenBuffers(1, &mEBO);
 
   expectNoErrors("Gen Buffers and Arrays");
-
   glBindVertexArray(mVAO);
 
   glBindBuffer(GL_ARRAY_BUFFER, mVBO);

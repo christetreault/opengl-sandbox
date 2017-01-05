@@ -5,6 +5,7 @@
 #include "Renderer.hpp"
 #include "util.hpp"
 #include "Timer.hpp"
+#include "Scene.hpp"
 
 namespace dmp
 {
@@ -24,6 +25,7 @@ namespace dmp
     Window mWindow;
     Renderer mRenderer;
     Timer mTimer;
+    Scene mScene;
   };
 }
 #endif

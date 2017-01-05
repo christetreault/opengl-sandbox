@@ -4,8 +4,10 @@
 #include <vector>
 #include <GL/glew.h>
 #include <glm/glm.hpp>
-#include "../Types.hpp"
+#include "Types.hpp"
 #include "../util.hpp"
+
+#include <iostream>
 
 namespace dmp
 {
@@ -51,7 +53,7 @@ namespace dmp
       expectNoErrors("Bind object");
     }
 
-    void draw()
+    void draw() const
     {
       expect("Object valid", mValid);
       if (mHasIndices)
@@ -69,6 +71,8 @@ namespace dmp
         }
       expectNoErrors("Draw object");
     }
+
+    glm::mat4 getM() const {return mM;}
 
   private:
     void initObject(std::vector<ObjectVertex> * verts,

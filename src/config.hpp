@@ -8,8 +8,10 @@
 
 namespace dmp
 {
-  float fieldOfView = glm::radians(60.0f);
+  static float fieldOfView = glm::radians(60.0f);
 
+  // some random test model for the test scene implementation
+  static const char * testModel = "res/models/model.ply";
 }
 
 #endif

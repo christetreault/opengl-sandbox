@@ -13,13 +13,14 @@ $(BUILD_MODE_FLAGS) $(LIB_DEFINES)
 
 LIB_DEFINES = $(GLM_DEFINES)
 
-OBJ_FILES = main.o Window.o Renderer.o Shader.o Program.o Timer.o Object.o
+OBJ_FILES = main.o Window.o Renderer.o Shader.o Program.o Timer.o Object.o \
+Scene.o
 
-PKG_CONFIG_LIBS = glfw3 Magick++ gl glew
+PKG_CONFIG_LIBS = glfw3 Magick++ gl glew assimp
 MANUAL_LIBS =
 LIBS = $(MANUAL_LIBS) $(shell pkg-config --libs $(PKG_CONFIG_LIBS))
 
-PKG_CONFIG_INCLUDE = glfw3 Magick++ gl glew
+PKG_CONFIG_INCLUDE = glfw3 Magick++ gl glew assimp
 MANUAL_INCLUDE =
 INCLUDE = $(MANUAL_INCLUDE) $(shell pkg-config --cflags $(PKG_CONFIG_INCLUDE))
 
@@ -65,6 +66,8 @@ Timer.o : $(SRC_DIR)/Timer.cpp $(SRC_DIR)/Timer.hpp
 Object.o : $(SRC_DIR)/Scene/Object.cpp $(SRC_DIR)/Scene/Object.hpp
 	   $(call compile,Scene/Object.cpp)
 
+Scene.o : $(SRC_DIR)/Scene.cpp $(SRC_DIR)/Scene.hpp
+	  $(call compile,Scene.cpp)
 
 rebuild : clean build
 
@@ -77,6 +80,7 @@ clean :
 	$(RM) $(PROG_NAME)
 	$(RM) $(SRC_DIR)/*~
 	$(RM) $(SRC_DIR)/Renderer/*~
+	$(RM) $(SRC_DIR)/Scene/*~
 	$(RM) $(RES_DIR)/*~
 	$(RM) $(SHADER_DIR)/*~
 
