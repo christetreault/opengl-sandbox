@@ -39,7 +39,9 @@ dmp::Program::Program(int width, int height, const char * title)
                              int width,
                              int height)
     {
-      mRenderer.resize((GLsizei) width, (GLsizei) height);
+      int fbWidth, fbHeight;
+      glfwGetFramebufferSize(w, &fbWidth, &fbHeight);
+      mRenderer.resize((GLsizei) fbWidth, (GLsizei) fbHeight);
     };
 
   glfwSetErrorCallback(errorCb);
