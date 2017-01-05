@@ -42,7 +42,7 @@ release : clean
 
 build : $(OBJ_FILES)
 	$(call padEcho,linking $(PROG_NAME) in $(BUILD_MODE) mode...)
-	$(CXX) -o $(PROG_NAME) $(OBJ_FILES) $(CXX_FLAGS) $(INCLUDE) $(LIBS)
+	$(CXX) -o $(PROG_NAME) $(OBJ_FILES) $(CXX_FLAGS) $(INCLUDE) $(LIBS) -framework OpenGL
 	$(call padEcho,done!)
 
 main.o : $(SRC_DIR)/main.cpp
@@ -88,12 +88,12 @@ clean :
 # --- Functions --------------------------------------------
 # ----------------------------------------------------------
 
-define compile =
+define compile
 $(call padEcho,compiling $(1)...)
 $(CXX) -c $(SRC_DIR)/$(1) $(CXX_FLAGS) $(INCLUDE) $(LIBS)
 endef
 
-define padEcho =
+define padEcho
 @echo
 @echo --------------------------------------------------------------------------------
 @echo $(1)
