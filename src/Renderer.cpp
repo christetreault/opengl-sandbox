@@ -15,6 +15,8 @@ dmp::Renderer::Renderer(GLsizei width,
                         const std::string shaderName)
 {
   initRenderer();
+  ifDebug(std::cerr << "Supported GLSL version: " << (char *)glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl);
+  ifDebug(std::cerr << "Supported GLSL version: " << (char *)glGetString(GL_VERSION) << std::endl);
   loadShaders(shaderName);
   resize(width, height);
 }
