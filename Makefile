@@ -16,11 +16,11 @@ LIB_DEFINES = $(GLM_DEFINES)
 OBJ_FILES = main.o Window.o Renderer.o Shader.o Program.o Timer.o Object.o \
 Scene.o
 
-PKG_CONFIG_LIBS = glfw3 Magick++ gl glew assimp
+PKG_CONFIG_LIBS = glfw3 Magick++ glew assimp
 MANUAL_LIBS =
 LIBS = $(MANUAL_LIBS) $(shell pkg-config --libs $(PKG_CONFIG_LIBS))
 
-PKG_CONFIG_INCLUDE = glfw3 Magick++ gl glew assimp
+PKG_CONFIG_INCLUDE = glfw3 Magick++ glew assimp
 MANUAL_INCLUDE =
 INCLUDE = $(MANUAL_INCLUDE) $(shell pkg-config --cflags $(PKG_CONFIG_INCLUDE))
 
