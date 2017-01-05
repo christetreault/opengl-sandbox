@@ -1,5 +1,6 @@
 .DEFAULT_GOAL := all
 .PHONY := all build rebuild clean debug release
+OS_NAME := $(shell uname)
 
 PROG_NAME = sandbox
 SRC_DIR = src
@@ -10,6 +11,12 @@ CXX = g++
 CXX_FLAGS = -g -Wall -Wconversion -std=c++14 -Ofast -MD -MP \
 $(BUILD_MODE_FLAGS) $(LIB_DEFINES)
 
+ifeq ($(OS_NAME), Linux)
+OS_LINKER_FLAGS =
+endif
+ifeq ($(OS_NAME), Darwin)
+OS_LINKER_FLAGS = -framework OpenGL
+endif
 
 LIB_DEFINES = $(GLM_DEFINES)
 
@@ -42,7 +49,7 @@ release : clean
 
 build : $(OBJ_FILES)
 	$(call padEcho,linking $(PROG_NAME) in $(BUILD_MODE) mode...)
-	$(CXX) -o $(PROG_NAME) $(OBJ_FILES) $(CXX_FLAGS) $(INCLUDE) $(LIBS) -framework OpenGL
+	$(CXX) -o $(PROG_NAME) $(OBJ_FILES) $(CXX_FLAGS) $(INCLUDE) $(LIBS) $(OS_LINKER_FLAGS)
 	$(call padEcho,done!)
 
 main.o : $(SRC_DIR)/main.cpp

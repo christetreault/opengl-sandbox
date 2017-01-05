@@ -59,8 +59,9 @@ dmp::Window::Window(int width,
   initCallbacks();
 
   glfwMakeContextCurrent(mWindow);
-
+  expectNoErrors("Make context current");
   glfwSwapInterval(1); // vsync
+  expectNoErrors("Set vsync");
 }
 
 dmp::Window::~Window()

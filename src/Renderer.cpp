@@ -33,8 +33,19 @@ void dmp::Renderer::loadShaders(const std::string shaderName)
 
 void dmp::Renderer::initRenderer()
 {
+  // This whole section is quite icky. Maybe I shouldn't be using glew...
+  glewExperimental = GL_TRUE;
+  expectNoErrors("begin initrenderer");
   expect("Init Glew",
          glewInit() == GLEW_OK);
+
+  auto err = glGetError();
+
+  expect("glewInit will report GL_INVALID_ENUM",
+         err == GL_INVALID_ENUM || err == GL_NO_ERROR);
+
+  expectNoErrors("init glew");
+  // end yuckiness
 
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LEQUAL);
@@ -45,7 +56,7 @@ void dmp::Renderer::initRenderer()
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   glEnable(GL_PROGRAM_POINT_SIZE);
 
-  expectNoErrors();
+  expectNoErrors("init renderer");
 }
 
 void dmp::Renderer::resize(GLsizei width, GLsizei height)
