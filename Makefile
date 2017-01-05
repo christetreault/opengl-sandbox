@@ -88,12 +88,12 @@ clean :
 # --- Functions --------------------------------------------
 # ----------------------------------------------------------
 
-define compile =
+define compile
 $(call padEcho,compiling $(1)...)
 $(CXX) -c $(SRC_DIR)/$(1) $(CXX_FLAGS) $(INCLUDE) $(LIBS)
 endef
 
-define padEcho =
+define padEcho
 @echo
 @echo --------------------------------------------------------------------------------
 @echo $(1)
