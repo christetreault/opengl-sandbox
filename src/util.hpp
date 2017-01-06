@@ -72,6 +72,15 @@
 #error todo already defined!
 #endif
 
+#ifndef impossible
+#define impossible(_msg)                                                \
+  {                                                                          \
+    throw dmp::InvariantViolation("This should never happen: " _msg, __FILE__, __LINE__); \
+  }
+#else
+#error impossible already defined!
+#endif
+
 namespace dmp
 {
   class InvariantViolation : public std::exception

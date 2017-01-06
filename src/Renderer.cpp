@@ -79,28 +79,38 @@ void dmp::Renderer::resize(GLsizei width, GLsizei height)
 
 void dmp::Renderer::render(const Scene & scene)
 {
+  expect("Scene Object Constants not null",
+         scene.objectConstants);
+
   glClear(GL_DEPTH_BUFFER_BIT);
   glClear(GL_COLOR_BUFFER_BIT);
 
   expectNoErrors("Clear prior to render");
 
-  auto M = scene.objects[0].getM();
   auto V = scene.cameras[0].V;
   auto P = mP;
 
-  auto PVM = P * V * M;
+  auto PV = P * V;
 
   glUseProgram(mShaderProg);
 
   expectNoErrors("Bind shader program");
 
-  glUniformMatrix4fv(glGetUniformLocation(mShaderProg, "PVM"),
+  glUniformMatrix4fv(glGetUniformLocation(mShaderProg, "PV"),
                      1,
                      GL_FALSE,
-                     &PVM[0][0]);
+                     &PV[0][0]);
 
-  expectNoErrors("Set uniforms");
+  GLuint ocIdx = glGetUniformBlockIndex(mShaderProg, "ObjectConstants");
+  glUniformBlockBinding(mShaderProg, ocIdx, 3);
 
-  scene.objects[0].bind();
-  scene.objects[0].draw();
+  for (size_t i = 0; i < scene.objects.size(); ++i)
+    {
+      scene.objectConstants->bind(3, i);
+
+      expectNoErrors("Set uniforms");
+
+      scene.objects[i].bind();
+      scene.objects[i].draw();
+    }
 }

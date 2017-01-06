@@ -89,4 +89,9 @@ void dmp::sortByMaterial(std::vector<Object> & objs)
             {
               return lhs.mMaterialIdx < rhs.mMaterialIdx;
             });
+
+  for (auto & curr : objs)
+    {
+      curr.setDirty();
+    }
 }

@@ -104,23 +104,28 @@ static void loadTestModel(std::vector<ObjectVertex> & verts,
 
 void dmp::buildScene(dmp::Scene & scene)
 {
-  std::vector<ObjectVertex> verts(0);
-  //verts.push_back({glm::vec4(-1.0f, 1.0f, -1.0f, 1.0f), glm::vec4(0.0f, 0.0f, 1.0f, 0.0f)});
-  //verts.push_back({glm::vec4(1.0f, 1.0f, -1.0f, 1.0f), glm::vec4(0.0f, 0.0f, 1.0f, 0.0f)});
-  //verts.push_back({glm::vec4(0.0f, -1.0f, -1.0f, 1.0f), glm::vec4(0.0f, 0.0f, 1.0f, 0.0f)});
+  std::vector<ObjectVertex> triVerts(0);
+  triVerts.push_back({glm::vec4(-1000.0f, 1000.0f, -100.0f, 1.0f), glm::vec4(0.0f, 0.0f, 1.0f, 0.0f)});
+  triVerts.push_back({glm::vec4(1000.0f, 1000.0f, -100.0f, 1.0f), glm::vec4(0.0f, 0.0f, 1.0f, 0.0f)});
+  triVerts.push_back({glm::vec4(0.0f, -1000.0f, -100.0f, 1.0f), glm::vec4(0.0f, 0.0f, 1.0f, 0.0f)});
+  std::vector<GLuint> triIdxs = {0,2,1};
 
-  std::vector<GLuint> idxs(0);// = {0,2,1};
+
+  std::vector<ObjectVertex> verts(0);
+  std::vector<GLuint> idxs(0);
 
   loadTestModel(verts, idxs);
 
   scene.objects.emplace_back(verts, GL_TRIANGLES, 0);
+  scene.objects.emplace_back(triVerts, triIdxs, GL_TRIANGLES, 0);
+
+  sortByMaterial(scene.objects);
+
   scene.materials.push_back({});
 
   auto xform = std::make_unique<Transform>();
   xform->mUpdateFn = [](glm::mat4 & M, float deltaT)
     {
-      //float angle = (float) fmod(deltaT * 100.0f, glm::two_pi<float>());
-      //std::cerr << "angle = " << angle << std::endl;
       M = glm::rotate(M,
                       deltaT / 2.0f,
                       glm::vec3(0.0f, 1.0f, 0.0f));
@@ -130,6 +135,7 @@ void dmp::buildScene(dmp::Scene & scene)
 
   xform->insert(scene.objects[0]);
   scene.sceneGraph.insert(xform);
+  scene.sceneGraph.insert(scene.objects[1]);
 
   Camera cam;
   cam.pos = {0.0f, 0.0f, 600.0f, 1.0f};
@@ -139,7 +145,40 @@ void dmp::buildScene(dmp::Scene & scene)
   scene.cameras.push_back(cam);
   scene.sceneGraph.insert(scene.cameras[0]);
 
-  sortByMaterial(scene.objects);
+  scene.objectConstants
+    = std::make_unique<UniformBuffer>(nullptr,
+                                      scene.objects.size(),
+                                      ObjectConstants::std140Size(),
+                                      true);
 
   scene.sceneGraph.update(0.0f, glm::mat4(), true);
+}
+
+void dmp::updateScene(dmp::Scene & scene,
+                      float deltaT)
+{
+  expect("Object constant buffer not null",
+         scene.objectConstants);
+
+  scene.sceneGraph.update(deltaT);
+
+  for (size_t i = 0; i < scene.objects.size(); ++i)
+    {
+      if (scene.objects[i].isDirty())
+        {
+          std::cerr << "updating: " << i << std::endl;
+
+          scene.objectConstants->update(i,
+                                        scene.objects[i].getObjectConstants());
+          scene.objects[i].setClean();
+        }
+    }
+}
+
+void dmp::freeScene(dmp::Scene & scene)
+{
+  for (auto & curr : scene.objects)
+    {
+      curr.freeObject();
+    }
 }

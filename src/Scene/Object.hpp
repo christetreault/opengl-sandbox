@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 #include "Types.hpp"
 #include "../util.hpp"
+#include "../Renderer/UniformBuffer.hpp"
 
 #include <iostream>
 
@@ -17,6 +18,17 @@ namespace dmp
     glm::vec4 normal;
   };
 
+  struct ObjectConstants
+  {
+    glm::mat4 M;
+    static size_t std140Size()
+    {
+      return dmp::std140PadStruct(std140MatSize<float, 4, 4>());
+    }
+
+    operator GLvoid *() {return (GLvoid *) this;}
+  };
+
   class Object
   {
   public:
@@ -26,7 +38,9 @@ namespace dmp
     Object(Object &&) = default;
     Object & operator=(Object &&) = default;
 
-    ~Object()
+    ~Object() {}
+
+    void freeObject()
     {
       if (!mValid) return;
 
@@ -44,11 +58,14 @@ namespace dmp
            size_t matIdx);
 
     void setDirty() {mDirty = true;}
+    bool isDirty() const {return mDirty;}
+    void setClean() {mDirty = false;}
     void setM(glm::mat4 M) {mM = M;}
 
     void bind() const
     {
       expect("Object valid", mValid);
+      expectNoErrors("Pre-bind object");
       glBindVertexArray(mVAO);
       expectNoErrors("Bind object");
     }
@@ -70,6 +87,16 @@ namespace dmp
                        drawCount);
         }
       expectNoErrors("Draw object");
+    }
+
+    ObjectConstants getObjectConstants() const
+    {
+      ObjectConstants retVal =
+        {
+          mM
+        };
+
+      return retVal;
     }
 
     glm::mat4 getM() const {return mM;}

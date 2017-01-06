@@ -28,6 +28,15 @@ namespace dmp
     glm::mat4 mP;
     Shader mShaderProg;
   };
+
+  // Opengl constants
+
+  inline int uniformBufferOffsetAlignment()
+  {
+    int alignment;
+    glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &alignment);
+    return alignment;
+  }
 };
 
 #endif
