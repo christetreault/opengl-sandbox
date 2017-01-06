@@ -16,12 +16,12 @@ namespace dmp
     UniformBuffer(UniformBuffer &&) = default;
     UniformBuffer & operator=(UniformBuffer &&) = default;
 
-    UniformBuffer(GLvoid * data, size_t elems, size_t elemSize, bool mut);
+    UniformBuffer(size_t elems, size_t elemSize);
     void update(size_t index, GLvoid * data);
     void bind(size_t blockIndex, size_t bufferIndex);
+    // TODO: void initializeData(std::vector<foo> data);
   private:
-    void initUniformBuffer(GLvoid * data);
-    bool mMutable = true;
+    void initUniformBuffer();
     GLuint mUBO = 0;
     GLsizei mElemSize = 0;
     GLsizei mNumElems = 0;

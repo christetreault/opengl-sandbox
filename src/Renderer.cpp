@@ -6,6 +6,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "util.hpp"
 #include "config.hpp"
+#include "Renderer/Pass.hpp"
 
 #include <iostream>
 #include <glm/gtx/string_cast.hpp>
@@ -24,6 +25,7 @@ dmp::Renderer::Renderer(GLsizei width,
           << (char *)glGetString(GL_VERSION)
           << std::endl);
   loadShaders(shaderName);
+  initPassConstants();
   resize(width, height);
 }
 
@@ -73,11 +75,17 @@ void dmp::Renderer::resize(GLsizei width, GLsizei height)
 
   mP = glm::perspective(fieldOfView,
                         fWidth / fHeight,
-                        0.1f,
-                        1000.0f);
+                        nearZ,
+                        farZ);
 }
 
-void dmp::Renderer::render(const Scene & scene)
+void dmp::Renderer::initPassConstants()
+{
+  mPassConstants = std::make_unique<UniformBuffer>(1,
+                                                   PassConstants::std140Size());
+}
+
+void dmp::Renderer::render(const Scene & scene, const Timer & timer)
 {
   expect("Scene Object Constants not null",
          scene.objectConstants);
@@ -87,25 +95,57 @@ void dmp::Renderer::render(const Scene & scene)
 
   expectNoErrors("Clear prior to render");
 
-  auto V = scene.cameras[0].V;
-  auto P = mP;
-
-  auto PV = P * V;
+  size_t materialIndex = scene.objects[0].materialIndex();
 
   glUseProgram(mShaderProg);
 
   expectNoErrors("Bind shader program");
 
-  glUniformMatrix4fv(glGetUniformLocation(mShaderProg, "PV"),
-                     1,
-                     GL_FALSE,
-                     &PV[0][0]);
+  // Pass constants
+
+  PassConstants pc = {};
+
+  pc.lightColor[0] = scene.lights[0].color;
+  pc.lightDir[0] = scene.lights[0].M * scene.lights[0].dir;
+  pc.numLights = 1;
+
+  pc.P = mP;
+  pc.invP = glm::inverse(pc.P);
+  pc.V = scene.cameras[0].V;
+  pc.invP = glm::inverse(pc.V);
+  pc.PV = pc.P * pc.V;
+  pc.invPV = glm::inverse(pc.PV);
+  pc.E = scene.cameras[0].pos;
+  pc.nearZ = nearZ;
+  pc.farZ = farZ;
+  pc.deltaT = timer.deltaTime();
+  pc.totalT = timer.time();
+
+  mPassConstants->update(0, pc);
+
+  GLuint pcIdx = glGetUniformBlockIndex(mShaderProg, "PassConstants");
+  glUniformBlockBinding(mShaderProg, pcIdx, 1);
+  mPassConstants->bind(1, 0);
+
+  // Material Constants
+
+  GLuint mcIdx = glGetUniformBlockIndex(mShaderProg, "MaterialConstants");
+  glUniformBlockBinding(mShaderProg, mcIdx, 2);
+  scene.materialConstants->bind(2, materialIndex);
+
+  // Object Constants
 
   GLuint ocIdx = glGetUniformBlockIndex(mShaderProg, "ObjectConstants");
   glUniformBlockBinding(mShaderProg, ocIdx, 3);
 
   for (size_t i = 0; i < scene.objects.size(); ++i)
     {
+      if (scene.objects[i].materialIndex() != materialIndex)
+        {
+          materialIndex = scene.objects[i].materialIndex();
+          scene.materialConstants->bind(2, materialIndex);
+        }
+
       scene.objectConstants->bind(3, i);
 
       expectNoErrors("Set uniforms");

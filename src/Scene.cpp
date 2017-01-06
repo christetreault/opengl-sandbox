@@ -104,6 +104,8 @@ static void loadTestModel(std::vector<ObjectVertex> & verts,
 
 void dmp::buildScene(dmp::Scene & scene)
 {
+  scene.graph = std::make_unique<Branch>();
+
   std::vector<ObjectVertex> triVerts(0);
   triVerts.push_back({glm::vec4(-1000.0f, 1000.0f, -100.0f, 1.0f), glm::vec4(0.0f, 0.0f, 1.0f, 0.0f)});
   triVerts.push_back({glm::vec4(1000.0f, 1000.0f, -100.0f, 1.0f), glm::vec4(0.0f, 0.0f, 1.0f, 0.0f)});
@@ -117,25 +119,74 @@ void dmp::buildScene(dmp::Scene & scene)
   loadTestModel(verts, idxs);
 
   scene.objects.emplace_back(verts, GL_TRIANGLES, 0);
-  scene.objects.emplace_back(triVerts, triIdxs, GL_TRIANGLES, 0);
+  scene.objects.emplace_back(triVerts, triIdxs, GL_TRIANGLES, 1);
 
   sortByMaterial(scene.objects);
 
-  scene.materials.push_back({});
+  scene.materials.push_back(
+    {
+      {
+        0.25f, 0.20725f, 0.20725f, 1.0f
+      },
+      {
+        1.0f, 0.829f, 0.829f, 1.0f
+      },
+      {
+        0.296648, 0.296648, 0.296648, 1.0f
+      },
+      0.088f
+    });
+  scene.materials.push_back(
+    {
+      {
+        0.1745f, 0.01175f, 0.01175f, 1.0f
+      },
+      {
+        0.61424f, 0.04136f, 0.04136f, 1.0f
+      },
+      {
+        0.727811f, 0.626959f, 0.626959f, 1.0f
+      },
+      0.6f
+    });
 
-  auto xform = std::make_unique<Transform>();
-  xform->mUpdateFn = [](glm::mat4 & M, float deltaT)
+  scene.materialConstants =
+    std::make_unique<UniformBuffer>(scene.materials.size(),
+                                    Material::std140Size());
+
+  for (size_t i = 0; i < scene.materials.size(); ++i)
+    {
+      scene.materialConstants->update(i,
+                                      scene.materials[i]);
+    }
+
+  scene.lights.push_back({
+      {1.0f, 1.0f, 1.0f, 1.0f},
+      {0.0f, -0.1f, 1.0f, 0.0f},
+      glm::mat4()
+    });
+
+  auto rotateY = scene.graph->transform([](glm::mat4 & M, float deltaT)
     {
       M = glm::rotate(M,
                       deltaT / 2.0f,
                       glm::vec3(0.0f, 1.0f, 0.0f));
 
       return true;
-    };
+    });
 
-  xform->insert(scene.objects[0]);
-  scene.sceneGraph.insert(xform);
-  scene.sceneGraph.insert(scene.objects[1]);
+  auto antiY = scene.graph->transform([](glm::mat4 & M, float deltaT)
+    {
+      M = glm::rotate(M,
+                      -(deltaT / 2.0f),
+                      glm::vec3(0.0f, 1.0f, 0.0f));
+
+      return true;
+    });
+
+  rotateY->insert(scene.objects[0]);
+  antiY->insert(scene.lights[0]);
+  scene.graph->insert(scene.objects[1]);
 
   Camera cam;
   cam.pos = {0.0f, 0.0f, 600.0f, 1.0f};
@@ -143,15 +194,13 @@ void dmp::buildScene(dmp::Scene & scene)
   cam.focus = {0.0f, 0.0f, 0.0f, 1.0f};
 
   scene.cameras.push_back(cam);
-  scene.sceneGraph.insert(scene.cameras[0]);
+  scene.graph->insert(scene.cameras[0]);
 
   scene.objectConstants
-    = std::make_unique<UniformBuffer>(nullptr,
-                                      scene.objects.size(),
-                                      ObjectConstants::std140Size(),
-                                      true);
+    = std::make_unique<UniformBuffer>(scene.objects.size(),
+                                      ObjectConstants::std140Size());
 
-  scene.sceneGraph.update(0.0f, glm::mat4(), true);
+  scene.graph->update(0.0f, glm::mat4(), true);
 }
 
 void dmp::updateScene(dmp::Scene & scene,
@@ -160,14 +209,12 @@ void dmp::updateScene(dmp::Scene & scene,
   expect("Object constant buffer not null",
          scene.objectConstants);
 
-  scene.sceneGraph.update(deltaT);
+  scene.graph->update(deltaT);
 
   for (size_t i = 0; i < scene.objects.size(); ++i)
     {
       if (scene.objects[i].isDirty())
         {
-          std::cerr << "updating: " << i << std::endl;
-
           scene.objectConstants->update(i,
                                         scene.objects[i].getObjectConstants());
           scene.objects[i].setClean();

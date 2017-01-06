@@ -21,7 +21,7 @@ endif
 LIB_DEFINES = $(GLM_DEFINES)
 
 OBJ_FILES = main.o Window.o Renderer.o Shader.o Program.o Timer.o Object.o \
-Scene.o UniformBuffer.o
+Scene.o UniformBuffer.o Graph.o Pass.o
 
 PKG_CONFIG_LIBS = glfw3 Magick++ glew assimp
 MANUAL_LIBS =
@@ -79,6 +79,12 @@ Scene.o : $(SRC_DIR)/Scene.cpp $(SRC_DIR)/Scene.hpp
 UniformBuffer.o : $(SRC_DIR)/Renderer/UniformBuffer.cpp \
 		  $(SRC_DIR)/Renderer/UniformBuffer.hpp
 		  $(call compile,Renderer/UniformBuffer.cpp)
+
+Graph.o : $(SRC_DIR)/Scene/Graph.cpp $(SRC_DIR)/Scene/Graph.hpp
+	  $(call compile,Scene/Graph.cpp)
+
+Pass.o : $(SRC_DIR)/Renderer/Pass.cpp $(SRC_DIR)/Renderer/Pass.hpp
+	 $(call compile,Renderer/Pass.cpp)
 
 rebuild : clean build
 

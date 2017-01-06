@@ -85,7 +85,7 @@ int dmp::Program::run()
       else
         {
           updateScene(mScene, mTimer.deltaTime());
-          mRenderer.render(mScene);
+          mRenderer.render(mScene, mTimer);
           mWindow.swapBuffer();
         }
 

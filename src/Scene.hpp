@@ -13,11 +13,12 @@ namespace dmp
   struct Scene
   {
     std::vector<Material> materials;
+    std::unique_ptr<UniformBuffer> materialConstants;
     std::vector<Light> lights;
     std::vector<Camera> cameras;
     std::vector<Object> objects;
     std::unique_ptr<UniformBuffer> objectConstants;
-    Branch sceneGraph;
+    std::unique_ptr<Branch> graph;
   };
 
   void buildScene(Scene & scene);

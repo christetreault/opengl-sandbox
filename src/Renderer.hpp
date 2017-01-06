@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include "Scene.hpp"
 #include "Renderer/Shader.hpp"
+#include "Timer.hpp"
 
 namespace dmp
 {
@@ -20,13 +21,16 @@ namespace dmp
     Renderer(GLsizei width, GLsizei height, const std::string shaderFile);
     void resize(GLsizei width, GLsizei height);
 
-    void render(const Scene & scene);
+    void render(const Scene & scene, const Timer & timer);
   private:
     void initRenderer();
     void loadShaders(const std::string shaderFile);
+    void initPassConstants();
 
     glm::mat4 mP;
     Shader mShaderProg;
+
+    std::unique_ptr<UniformBuffer> mPassConstants;
   };
 
   // Opengl constants

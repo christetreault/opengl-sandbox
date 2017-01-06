@@ -32,23 +32,9 @@ namespace dmp
     ContainerVisitor(float deltaT, glm::mat4 M, bool dirty)
       : mDeltaT(deltaT), mM(M), mDirty(dirty) {}
 
-    void operator()(Object & obj) const
-    {
-      obj.setDirty();
-      obj.setM(mM);
-    }
-    void operator()(Camera & cam) const
-    {
-      cam.pos = mM * cam.pos;
-      cam.focus = mM * cam.focus;
-      cam.V = glm::lookAt(glm::vec3(cam.pos),
-                          glm::vec3(cam.focus),
-                          glm::vec3(cam.up));
-    }
-
-    void operator()(Light & lit) const
-    {
-    }
+    void operator()(Object & obj) const;
+    void operator()(Camera & cam) const;
+    void operator()(Light & lit) const;
 
     float mDeltaT;
     glm::mat4 mM;
@@ -59,43 +45,39 @@ namespace dmp
   {
   public:
     Container() = delete;
-    Container(Object & obj)
-      : mValue(obj)
-    {}
-    Container(Camera & cam)
-      : mValue(cam)
-    {}
-    Container(Light & lit)
-      : mValue(lit)
-    {}
+    Container(Object & obj) : mValue(obj) {}
+    Container(Camera & cam) : mValue(cam) {}
+    Container(Light & lit) : mValue(lit) {}
 
   private:
-    void updateImpl(float deltaT, glm::mat4 M, bool dirty) override
-    {
-      if (dirty)
-        {
-          boost::apply_visitor(ContainerVisitor(deltaT, M, dirty), mValue);
-        }
-    }
-
+    void updateImpl(float deltaT, glm::mat4 M, bool dirty) override;
     boost::variant<Object &, Camera &, Light &> mValue;
   };
 
-  static auto identityTransFn = [] (glm::mat4 &, float) {return false;};
+  static auto noTransform = [] (glm::mat4 &, float) {return false;};
 
   class Transform : public Node
   {
   public:
-    std::function<bool(glm::mat4 &, float)> mUpdateFn = identityTransFn;
+    // CONTRACT: If the update function does not make a change, then it
+    // MUST return false. If it makes a change, then it MUST return true.
+    std::function<bool(glm::mat4 &, float)> mUpdateFn = noTransform;
     glm::mat4 mTransform;
     std::unique_ptr<Node> mChild = nullptr;
-    void insert(Object & o) {mChild = std::make_unique<Container>(o);}
-    void insert(Light & l) {mChild = std::make_unique<Container>(l);}
-    void insert(Camera & c) {mChild = std::make_unique<Container>(c);}
-    void insert(std::unique_ptr<Node> & n) {mChild = std::move(n);}
-    void insert(std::unique_ptr<Transform> & t) {mChild = std::move(t);}
-    void insert(std::unique_ptr<Branch> & b);
-    void insert(std::unique_ptr<Container> & c) {mChild = std::move(c);}
+
+    Container * insert(Object & o);
+    Container * insert(Light & l);
+    Container * insert(Camera & c);
+    Node * insert(std::unique_ptr<Node> & n);
+    Transform * insert(std::unique_ptr<Transform> & t);
+    Branch * insert(std::unique_ptr<Branch> & b);
+    Container * insert(std::unique_ptr<Container> & c);
+
+    Transform * transform();
+    Transform * transform(glm::mat4 &);
+    Transform * transform(std::function<bool(glm::mat4 &, float)>);
+    Transform * transform(glm::mat4 &, std::function<bool(glm::mat4 &, float)>);
+    Branch * branch();
   private:
     void updateImpl(float deltaT, glm::mat4 M, bool) override
     {
@@ -110,15 +92,21 @@ namespace dmp
   class Branch : public Node
   {
   public:
-    void insert(std::unique_ptr<Node> & n) {mChildren.push_back(std::move(n));}
-    void insert(std::unique_ptr<Transform> & t) {mChildren.push_back(std::move(t));}
-    void insert(std::unique_ptr<Branch> & b) {mChildren.push_back(std::move(b));}
-    void insert(std::unique_ptr<Container> & c) {mChildren.push_back(std::move(c));}
-    void insert(Object & o) {mChildren.push_back(std::make_unique<Container>(o));}
-    void insert(Light & l) {mChildren.push_back(std::make_unique<Container>(l));}
-    void insert(Camera & c) {mChildren.push_back(std::make_unique<Container>(c));}
-  private:
     std::vector<std::unique_ptr<Node>> mChildren;
+
+    Node * insert(std::unique_ptr<Node> & n);
+    Transform * insert(std::unique_ptr<Transform> & t);
+    Branch * insert(std::unique_ptr<Branch> & b);
+    Container * insert(std::unique_ptr<Container> & c);
+    Container * insert(Object & o);
+    Container * insert(Light & l);
+    Container * insert(Camera & c);
+
+    Transform * transform();
+    Transform * transform(glm::mat4 &);
+    Transform * transform(std::function<bool(glm::mat4 &, float)>);
+    Transform * transform(glm::mat4 &, std::function<bool(glm::mat4 &, float)>);
+  private:
     void updateImpl(float deltaT, glm::mat4 M, bool dirty) override
     {
       for (auto & curr : mChildren)
@@ -127,12 +115,6 @@ namespace dmp
         }
     }
   };
-
-  // this is super gross. I just need to stop being lazy and make a .cpp file...
-  inline void Transform::insert(std::unique_ptr<Branch> & b)
-  {
-    mChild = std::move(b);
-  }
 }
 
 #endif

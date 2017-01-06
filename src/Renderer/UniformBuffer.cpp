@@ -2,29 +2,24 @@
 
 #include "../Renderer.hpp"
 
-dmp::UniformBuffer::UniformBuffer(GLvoid * data,
-                                  size_t elems,
-                                  size_t elemSize,
-                                  bool mut)
-  : mMutable(mut), mElemSize((GLsizei) elemSize), mNumElems((GLsizei) elems)
+dmp::UniformBuffer::UniformBuffer(size_t elems,
+                                  size_t elemSize)
+  : mElemSize((GLsizei) elemSize), mNumElems((GLsizei) elems)
 {
-  expect("if immutable, data must not be null!",
-         mut || data);
-  initUniformBuffer(data);
+  initUniformBuffer();
 }
 
-void dmp::UniformBuffer::initUniformBuffer(GLvoid * data)
+void dmp::UniformBuffer::initUniformBuffer()
 {
   glGenBuffers(1, &mUBO);
   glBindBuffer(GL_UNIFORM_BUFFER, mUBO);
-  auto mutability = mMutable ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
-  glBufferData(GL_UNIFORM_BUFFER, mElemSize * mNumElems, data, mutability);
+  glBufferData(GL_UNIFORM_BUFFER, mElemSize * mNumElems, nullptr,
+               GL_DYNAMIC_DRAW);
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
 void dmp::UniformBuffer::update(size_t index, GLvoid * data)
 {
-  expect("This buffer is mutable", mMutable);
   expect("index in range", (GLsizei) index < mNumElems);
   glBindBuffer(GL_UNIFORM_BUFFER, mUBO);
   glBufferSubData(GL_UNIFORM_BUFFER,
@@ -46,7 +41,7 @@ void dmp::UniformBuffer::bind(size_t blockIndex, size_t bufferIndex)
   glBindBufferRange(GL_UNIFORM_BUFFER,
                     (GLsizei) blockIndex,
                     mUBO,
-                    (GLsizei) bufferIndex * mElemSize, // TODO: index = 1 * size is invalid
+                    (GLsizei) bufferIndex * mElemSize,
                     mElemSize);
 }
 

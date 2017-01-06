@@ -21,9 +21,10 @@ namespace dmp
   struct ObjectConstants
   {
     glm::mat4 M;
+    glm::mat4 normalM;
     static size_t std140Size()
     {
-      return dmp::std140PadStruct(std140MatSize<float, 4, 4>());
+      return dmp::std140PadStruct(std140MatSize<float, 4, 4>() * 2);
     }
 
     operator GLvoid *() {return (GLvoid *) this;}
@@ -93,13 +94,16 @@ namespace dmp
     {
       ObjectConstants retVal =
         {
-          mM
+          mM,
+          glm::mat4(glm::transpose(glm::inverse(glm::mat3(mM))))
         };
 
       return retVal;
     }
 
     glm::mat4 getM() const {return mM;}
+
+    size_t materialIndex() const {return mMaterialIdx;}
 
   private:
     void initObject(std::vector<ObjectVertex> * verts,
