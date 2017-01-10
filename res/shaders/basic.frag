@@ -64,14 +64,14 @@ void main()
       if (intensity > 0.0f)
         {
           vec4 posInv = normalize(-posToFrag);
-          vec4 half = normalize(dir + posInv);
+          vec4 hlf = normalize(dir + posInv);
 
           spec = lightColor[i]
             * specular
-            * pow(max(dot(normalToFrag, half), 0.0), shininess);
+            * pow(max(dot(normalToFrag, hlf), 0.0), shininess);
         }
-      outColor += (am + diff + spec);
+      outColor += (/*am*/ + diff + spec);
     }
 
-  outColor = texture(tex, texCoordToFrag) * outColor;
+  if (isTextured) outColor = texture(tex, texCoordToFrag) * outColor;
 }
