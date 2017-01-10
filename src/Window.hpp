@@ -20,7 +20,7 @@ namespace dmp
     void swapBuffer() {glfwSwapBuffers(mWindow);}
     void pollEvents() {glfwPollEvents();}
 
-    void updateFPS(size_t fps);
+    void updateFPS(size_t fps, size_t mspf);
 
     // Input
     std::function<void(GLFWwindow *, int, int, int)> mouseButtonFn;
@@ -42,6 +42,7 @@ namespace dmp
     GLFWwindow * mWindow = nullptr;
     const char * mTitle = "";
     size_t mFPS = 0;
+    size_t mMSPF = 0;
 
     void initCallbacks();
 

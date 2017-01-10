@@ -8,17 +8,17 @@ using namespace dmp;
 
 void ContainerVisitor::operator()(Object & obj) const
 {
-  obj.setDirty();
   obj.setM(mM);
 }
 
-void ContainerVisitor::operator()(Camera & cam) const
+void ContainerVisitor::operator()(CameraPos & cam) const
 {
-  cam.pos = mM * cam.pos;
-  cam.focus = mM * cam.focus;
-  cam.V = glm::lookAt(glm::vec3(cam.pos),
-                      glm::vec3(cam.focus),
-                      glm::vec3(cam.up));
+  cam.setM(mM);
+}
+
+void ContainerVisitor::operator()(CameraFocus & cam) const
+{
+  cam.setM(mM);
 }
 
 void ContainerVisitor::operator()(Light & lit) const
@@ -54,7 +54,13 @@ Container * Transform::insert(Light & l)
   return (Container *) mChild.get();
 }
 
-Container * Transform::insert(Camera & c)
+Container * Transform::insert(CameraPos & c)
+{
+  mChild = std::make_unique<Container>(c);
+  return (Container *) mChild.get();
+}
+
+Container * Transform::insert(CameraFocus & c)
 {
   mChild = std::make_unique<Container>(c);
   return (Container *) mChild.get();
@@ -78,7 +84,7 @@ Transform * Transform::transform()
   return insert(p);
 }
 
-Transform * Transform::transform(glm::mat4 & t)
+Transform * Transform::transform(glm::mat4 t)
 {
   auto p = std::make_unique<Transform>();
   p->mTransform = t;
@@ -92,7 +98,7 @@ Transform * Transform::transform(std::function<bool(glm::mat4 &, float)> f)
   return insert(p);
 }
 
-Transform * Transform::transform(glm::mat4 & t,
+Transform * Transform::transform(glm::mat4 t,
                                  std::function<bool(glm::mat4 &, float)> f)
 {
   auto p = std::make_unique<Transform>();
@@ -141,7 +147,7 @@ Transform * Branch::transform()
   return insert(p);
 }
 
-Transform * Branch::transform(glm::mat4 & t)
+Transform * Branch::transform(glm::mat4 t)
 {
   auto p = std::make_unique<Transform>();
   p->mTransform = t;
@@ -155,7 +161,7 @@ Transform * Branch::transform(std::function<bool(glm::mat4 &, float)> f)
   return insert(p);
 }
 
-Transform * Branch::transform(glm::mat4 & t,
+Transform * Branch::transform(glm::mat4 t,
                               std::function<bool(glm::mat4 &, float)> f)
 {
   auto p = std::make_unique<Transform>();
@@ -188,7 +194,13 @@ Container * Branch::insert(Light & l)
   return (Container *) mChildren.back().get();
 }
 
-Container * Branch::insert(Camera & c)
+Container * Branch::insert(CameraPos & c)
+{
+  mChildren.push_back(std::make_unique<Container>(c));
+  return (Container *) mChildren.back().get();
+}
+
+Container * Branch::insert(CameraFocus & c)
 {
   mChildren.push_back(std::make_unique<Container>(c));
   return (Container *) mChildren.back().get();

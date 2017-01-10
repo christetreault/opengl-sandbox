@@ -6,7 +6,9 @@
 #include "Scene/Types.hpp"
 #include "Scene/Object.hpp"
 #include "Scene/Graph.hpp"
+#include "Scene/Camera.hpp"
 #include "Renderer/UniformBuffer.hpp"
+#include "Renderer/Texture.hpp"
 
 namespace dmp
 {
@@ -14,6 +16,7 @@ namespace dmp
   {
     std::vector<Material> materials;
     std::unique_ptr<UniformBuffer> materialConstants;
+    std::vector<Texture> textures;
     std::vector<Light> lights;
     std::vector<Camera> cameras;
     std::vector<Object> objects;

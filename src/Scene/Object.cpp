@@ -9,6 +9,8 @@ dmp::Object::Object(std::vector<ObjectVertex> verts,
   mHasIndices = false;
   mPrimFormat = format;
   mMaterialIdx = matIdx;
+  mIsTextured = false;
+  mTextureIdx = 0;
 
   initObject(&verts, nullptr);
 }
@@ -21,6 +23,37 @@ dmp::Object::Object(std::vector<ObjectVertex> verts,
   mHasIndices = true;
   mPrimFormat = format;
   mMaterialIdx = matIdx;
+  mIsTextured = false;
+  mTextureIdx = 0;
+
+  initObject(&verts, &idxs);
+}
+
+dmp::Object::Object(std::vector<ObjectVertex> verts,
+                    GLenum format,
+                    size_t matIdx,
+                    size_t texIdx)
+{
+  mHasIndices = false;
+  mPrimFormat = format;
+  mMaterialIdx = matIdx;
+  mIsTextured = true;
+  mTextureIdx = texIdx;
+
+  initObject(&verts, nullptr);
+}
+
+dmp::Object::Object(std::vector<ObjectVertex> verts,
+                    std::vector<GLuint> idxs,
+                    GLenum format,
+                    size_t matIdx,
+                    size_t texIdx)
+{
+  mHasIndices = true;
+  mPrimFormat = format;
+  mMaterialIdx = matIdx;
+  mIsTextured = true;
+  mTextureIdx = texIdx;
 
   initObject(&verts, &idxs);
 }
@@ -74,6 +107,14 @@ void dmp::Object::initObject(std::vector<ObjectVertex> * verts,
                         sizeof(ObjectVertex),
                         (GLvoid *) offsetof(ObjectVertex, normal));
 
+  glEnableVertexAttribArray(2);
+  glVertexAttribPointer(2,
+                        2,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(ObjectVertex),
+                        (GLvoid *) offsetof(ObjectVertex, texCoords));
+
   expectNoErrors("Set vertex attributes");
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -92,6 +133,6 @@ void dmp::sortByMaterial(std::vector<Object> & objs)
 
   for (auto & curr : objs)
     {
-      curr.setDirty();
+      curr.mDirty = true;
     }
 }

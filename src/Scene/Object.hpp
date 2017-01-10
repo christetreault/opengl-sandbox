@@ -16,15 +16,21 @@ namespace dmp
   {
     glm::vec4 position;
     glm::vec4 normal;
+    glm::vec2 texCoords;
   };
 
   struct ObjectConstants
   {
     glm::mat4 M;
     glm::mat4 normalM;
+
+    unsigned int isTextured;
+    glm::uvec3 isTexturedPadding;
+
     static size_t std140Size()
     {
-      return dmp::std140PadStruct(std140MatSize<float, 4, 4>() * 2);
+      return dmp::std140PadStruct((std140MatSize<float, 4, 4>() * 2)
+                                  + std140VecSize<unsigned int, 4>());
     }
 
     operator GLvoid *() {return (GLvoid *) this;}
@@ -58,10 +64,23 @@ namespace dmp
            GLenum format,
            size_t matIdx);
 
-    void setDirty() {mDirty = true;}
+    Object(std::vector<ObjectVertex> verts,
+           GLenum format,
+           size_t matIdx,
+           size_t texIdx);
+    Object(std::vector<ObjectVertex> verts,
+           std::vector<GLuint> idxs,
+           GLenum format,
+           size_t matIdx,
+           size_t texIdx);
+
     bool isDirty() const {return mDirty;}
     void setClean() {mDirty = false;}
-    void setM(glm::mat4 M) {mM = M;}
+    void setM(glm::mat4 M)
+    {
+      mM = M;
+      mDirty = true;
+    }
 
     void bind() const
     {
@@ -95,7 +114,8 @@ namespace dmp
       ObjectConstants retVal =
         {
           mM,
-          glm::mat4(glm::transpose(glm::inverse(glm::mat3(mM))))
+          glm::mat4(glm::transpose(glm::inverse(glm::mat3(mM)))),
+          mIsTextured
         };
 
       return retVal;
@@ -104,6 +124,8 @@ namespace dmp
     glm::mat4 getM() const {return mM;}
 
     size_t materialIndex() const {return mMaterialIdx;}
+    bool isTextured() const {return mIsTextured;}
+    size_t textureIndex() const {return mTextureIdx;}
 
   private:
     void initObject(std::vector<ObjectVertex> * verts,
@@ -119,6 +141,9 @@ namespace dmp
     GLenum mPrimFormat;
     bool mValid = false;
     size_t mMaterialIdx;
+
+    bool mIsTextured;
+    size_t mTextureIdx;
 
     GLsizei drawCount;
 

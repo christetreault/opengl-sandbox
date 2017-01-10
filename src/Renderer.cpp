@@ -111,11 +111,11 @@ void dmp::Renderer::render(const Scene & scene, const Timer & timer)
 
   pc.P = mP;
   pc.invP = glm::inverse(pc.P);
-  pc.V = scene.cameras[0].V;
+  pc.V = scene.cameras[0].getV();
   pc.invP = glm::inverse(pc.V);
   pc.PV = pc.P * pc.V;
   pc.invPV = glm::inverse(pc.PV);
-  pc.E = scene.cameras[0].pos;
+  pc.E = scene.cameras[0].getE(pc.PV);
   pc.nearZ = nearZ;
   pc.farZ = farZ;
   pc.deltaT = timer.deltaTime();
@@ -145,6 +145,14 @@ void dmp::Renderer::render(const Scene & scene, const Timer & timer)
           materialIndex = scene.objects[i].materialIndex();
           scene.materialConstants->bind(2, materialIndex);
         }
+
+       if (scene.objects[i].isTextured())
+         {
+           glActiveTexture(GL_TEXTURE0);
+           glBindTexture(GL_TEXTURE_2D,
+                         scene.textures[scene.objects[i].textureIndex()]);
+           glUniform1i(glGetUniformLocation(mShaderProg, "tex"), 0);
+         }
 
       scene.objectConstants->bind(3, i);
 

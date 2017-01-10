@@ -4,7 +4,6 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
-//#include <glm/gtc/matrix_transform.hpp>
 #include "config.hpp"
 
 #include <assimp/Importer.hpp>
@@ -34,6 +33,10 @@ static void processMesh(std::vector<ObjectVertex> & verts,
             mesh->mNormals[i].y,
             mesh->mNormals[i].z,
             1.0f
+          },
+          { // TODO: texcoords
+            0.0f,
+            0.0f
           }
         };
 
@@ -79,7 +82,7 @@ static void loadTestModel(std::vector<ObjectVertex> & verts,
   auto model = imp.ReadFile(testModel,
                             aiProcess_Triangulate
                             | aiProcess_GenNormals
-                            /*aiProcess_JoinIdenticalVertices
+                            /*| aiProcess_JoinIdenticalVertices
                             | aiProcess_Triangulate
                             | aiProcess_GenSmoothNormals
                             | aiProcess_PreTransformVertices
@@ -94,12 +97,14 @@ static void loadTestModel(std::vector<ObjectVertex> & verts,
                             | aiProcess_OptimizeGraph
                             | aiProcess_Debone*/);
 
-  std::cerr << "done!" << std::endl;
+  std::cerr << "processing..." << std::endl;
 
   expect("Read model file",
          !(!model || model->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !model->mRootNode));
 
   processNode(verts, idxs, model->mRootNode, model);
+
+  std::cerr << "done!" << std::endl;
 }
 
 void dmp::buildScene(dmp::Scene & scene)
@@ -107,9 +112,18 @@ void dmp::buildScene(dmp::Scene & scene)
   scene.graph = std::make_unique<Branch>();
 
   std::vector<ObjectVertex> triVerts(0);
-  triVerts.push_back({glm::vec4(-1000.0f, 1000.0f, -100.0f, 1.0f), glm::vec4(0.0f, 0.0f, 1.0f, 0.0f)});
-  triVerts.push_back({glm::vec4(1000.0f, 1000.0f, -100.0f, 1.0f), glm::vec4(0.0f, 0.0f, 1.0f, 0.0f)});
-  triVerts.push_back({glm::vec4(0.0f, -1000.0f, -100.0f, 1.0f), glm::vec4(0.0f, 0.0f, 1.0f, 0.0f)});
+  triVerts.push_back({
+      glm::vec4(-1000.0f, 1000.0f, -100.0f, 1.0f),
+        glm::vec4(0.0f, 0.0f, 1.0f, 0.0f),
+        glm::vec2(0.0f, 0.0f)});
+  triVerts.push_back({
+      glm::vec4(1000.0f, 1000.0f, -100.0f, 1.0f),
+        glm::vec4(0.0f, 0.0f, 1.0f, 0.0f),
+        glm::vec2(1.0f, 0.0f)});
+  triVerts.push_back({
+      glm::vec4(0.0f, -1000.0f, -100.0f, 1.0f),
+        glm::vec4(0.0f, 0.0f, 1.0f, 0.0f),
+        glm::vec2(0.5f, 1.0f)});
   std::vector<GLuint> triIdxs = {0,2,1};
 
 
@@ -118,24 +132,11 @@ void dmp::buildScene(dmp::Scene & scene)
 
   loadTestModel(verts, idxs);
 
-  scene.objects.emplace_back(verts, GL_TRIANGLES, 0);
-  scene.objects.emplace_back(triVerts, triIdxs, GL_TRIANGLES, 1);
+  scene.objects.emplace_back(verts, idxs, GL_TRIANGLES, 0, 0);
+  scene.objects.emplace_back(triVerts, triIdxs, GL_TRIANGLES, 1, 0);
 
   sortByMaterial(scene.objects);
 
-  scene.materials.push_back(
-    {
-      {
-        0.25f, 0.20725f, 0.20725f, 1.0f
-      },
-      {
-        1.0f, 0.829f, 0.829f, 1.0f
-      },
-      {
-        0.296648, 0.296648, 0.296648, 1.0f
-      },
-      0.088f
-    });
   scene.materials.push_back(
     {
       {
@@ -149,6 +150,23 @@ void dmp::buildScene(dmp::Scene & scene)
       },
       0.6f
     });
+  scene.materials.push_back(
+    {
+      {
+        0.25f, 0.20725f, 0.20725f, 1.0f
+      },
+      {
+        1.0f, 0.829f, 0.829f, 1.0f
+      },
+      {
+        0.296648, 0.296648, 0.296648, 1.0f
+      },
+      0.088f
+    });
+
+
+  std::string tex(testTexture);
+  scene.textures.emplace_back(tex);
 
   scene.materialConstants =
     std::make_unique<UniformBuffer>(scene.materials.size(),
@@ -183,18 +201,28 @@ void dmp::buildScene(dmp::Scene & scene)
 
       return true;
     });
+  auto back400 = scene.graph->transform(glm::translate(glm::mat4(),
+                                                       {0.0f, 0.0f, 400.0f}));
+
+  auto backRotate = back400->transform([](glm::mat4 & M, float deltaT)
+    {
+      M = glm::rotate(M,
+                      deltaT / 4.0f,
+                      glm::vec3(0.0f, 1.0f, 0.0f));
+
+      return true;
+    });
+
+  auto back200 = backRotate->transform(glm::translate(glm::mat4(),
+                                                     {0.0f, 0.0f, 200.0f}));
 
   rotateY->insert(scene.objects[0]);
   antiY->insert(scene.lights[0]);
-  scene.graph->insert(scene.objects[1]);
+  scene.graph->insert(scene.objects[0]);
 
-  Camera cam;
-  cam.pos = {0.0f, 0.0f, 600.0f, 1.0f};
-  cam.up = {0.0f, 1.0f, 0.0f, 0.0f};
-  cam.focus = {0.0f, 0.0f, 0.0f, 1.0f};
-
-  scene.cameras.push_back(cam);
-  scene.graph->insert(scene.cameras[0]);
+  scene.cameras.emplace_back();
+  scene.graph->insert(scene.cameras[0].focus());
+  back200->insert(scene.cameras[0].pos());
 
   scene.objectConstants
     = std::make_unique<UniformBuffer>(scene.objects.size(),
@@ -219,6 +247,11 @@ void dmp::updateScene(dmp::Scene & scene,
                                         scene.objects[i].getObjectConstants());
           scene.objects[i].setClean();
         }
+    }
+
+  for (auto & curr : scene.cameras)
+    {
+      curr.update();
     }
 }
 

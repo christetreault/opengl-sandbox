@@ -7,6 +7,7 @@
 #include <glm/glm.hpp>
 #include <memory>
 #include "Object.hpp"
+#include "Camera.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace dmp
@@ -33,7 +34,8 @@ namespace dmp
       : mDeltaT(deltaT), mM(M), mDirty(dirty) {}
 
     void operator()(Object & obj) const;
-    void operator()(Camera & cam) const;
+    void operator()(CameraPos & cam) const;
+    void operator()(CameraFocus & cam) const;
     void operator()(Light & lit) const;
 
     float mDeltaT;
@@ -46,12 +48,13 @@ namespace dmp
   public:
     Container() = delete;
     Container(Object & obj) : mValue(obj) {}
-    Container(Camera & cam) : mValue(cam) {}
+    Container(CameraPos & cam) : mValue(cam) {}
+    Container(CameraFocus & cam) : mValue(cam) {}
     Container(Light & lit) : mValue(lit) {}
 
   private:
     void updateImpl(float deltaT, glm::mat4 M, bool dirty) override;
-    boost::variant<Object &, Camera &, Light &> mValue;
+    boost::variant<Object &, CameraPos &, CameraFocus &, Light &> mValue;
   };
 
   static auto noTransform = [] (glm::mat4 &, float) {return false;};
@@ -67,23 +70,24 @@ namespace dmp
 
     Container * insert(Object & o);
     Container * insert(Light & l);
-    Container * insert(Camera & c);
+    Container * insert(CameraPos & c);
+    Container * insert(CameraFocus & c);
     Node * insert(std::unique_ptr<Node> & n);
     Transform * insert(std::unique_ptr<Transform> & t);
     Branch * insert(std::unique_ptr<Branch> & b);
     Container * insert(std::unique_ptr<Container> & c);
 
     Transform * transform();
-    Transform * transform(glm::mat4 &);
+    Transform * transform(glm::mat4);
     Transform * transform(std::function<bool(glm::mat4 &, float)>);
-    Transform * transform(glm::mat4 &, std::function<bool(glm::mat4 &, float)>);
+    Transform * transform(glm::mat4, std::function<bool(glm::mat4 &, float)>);
     Branch * branch();
   private:
-    void updateImpl(float deltaT, glm::mat4 M, bool) override
+    void updateImpl(float deltaT, glm::mat4 M, bool inDirty) override
     {
       // If outDirty == false, then it must be the case that mTransform is not
-      // changed
-      bool outDirty = mUpdateFn(mTransform, deltaT);
+      // changed.
+      bool outDirty = mUpdateFn(mTransform, deltaT) | inDirty;
       glm::mat4 outM = M * mTransform;
       if (mChild) mChild->update(deltaT, outM, outDirty);
     }
@@ -100,12 +104,13 @@ namespace dmp
     Container * insert(std::unique_ptr<Container> & c);
     Container * insert(Object & o);
     Container * insert(Light & l);
-    Container * insert(Camera & c);
+    Container * insert(CameraPos & c);
+    Container * insert(CameraFocus & c);
 
     Transform * transform();
-    Transform * transform(glm::mat4 &);
+    Transform * transform(glm::mat4);
     Transform * transform(std::function<bool(glm::mat4 &, float)>);
-    Transform * transform(glm::mat4 &, std::function<bool(glm::mat4 &, float)>);
+    Transform * transform(glm::mat4, std::function<bool(glm::mat4 &, float)>);
   private:
     void updateImpl(float deltaT, glm::mat4 M, bool dirty) override
     {

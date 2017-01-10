@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <unistd.h>
+#include "config.hpp"
 
 
 static void errorCb(int error, const char * description)
@@ -15,7 +16,7 @@ static void errorCb(int error, const char * description)
 
 dmp::Program::Program(int width, int height, const char * title)
   : mWindow(width, height, title),
-    mRenderer((GLsizei) width, (GLsizei) height, "res/shaders/basic"),
+    mRenderer((GLsizei) width, (GLsizei) height, basicShader),
     mTimer()
 {
   mWindow.keyFn = [](GLFWwindow * w,
@@ -58,7 +59,7 @@ static void updateFPS(dmp::Window & window, const dmp::Timer & timer)
 
   if ((runTime - timeElapsed) >= 1.0f)
     {
-      window.updateFPS(fps);
+      window.updateFPS(fps, 1000/fps);
 
       fps = 0;
       timeElapsed += 1.0f;

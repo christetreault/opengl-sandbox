@@ -2,6 +2,7 @@
 
 layout (location = 0) in vec4 posToVert;
 layout (location = 1) in vec4 normalToVert;
+layout (location = 2) in vec2 texCoordToVert;
 
 layout (std140) uniform PassConstants
 {
@@ -28,14 +29,18 @@ layout (std140) uniform ObjectConstants
 {
   mat4 M;
   mat4 normalM;
+
+  bool isTextured;
 };
 
 out vec4 normalToFrag;
 out vec4 posToFrag;
+out vec2 texCoordToFrag;
 
 void main()
 {
   gl_Position = PV * M * posToVert;
   normalToFrag = normalize(normalM * normalToVert);
   posToFrag = normalize(M * posToVert);
+  texCoordToFrag = texCoordToVert;
 }

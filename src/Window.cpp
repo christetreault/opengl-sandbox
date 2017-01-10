@@ -70,13 +70,16 @@ dmp::Window::~Window()
   mWindow = nullptr; // sure, why not?
 }
 
-void dmp::Window::updateFPS(size_t fps)
+void dmp::Window::updateFPS(size_t fps, size_t mspf)
 {
   expect("update FPS", mWindow != nullptr);
 
   mFPS = fps;
+  mMSPF = mspf;
   std::string title = mTitle
     + std::string(" : FPS = ")
-    + std::to_string(mFPS);
+    + std::to_string(mFPS)
+    + std::string(" / MSPF = ")
+    + std::to_string(mMSPF);
   glfwSetWindowTitle(mWindow, title.c_str());
 }

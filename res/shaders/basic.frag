@@ -2,6 +2,7 @@
 
 in vec4 normalToFrag;
 in vec4 posToFrag;
+in vec2 texCoordToFrag;
 
 out vec4 outColor;
 
@@ -37,6 +38,16 @@ layout (std140) uniform MaterialConstants
   float shininess;
 };
 
+layout (std140) uniform ObjectConstants
+{
+  mat4 M;
+  mat4 normalM;
+
+  bool isTextured;
+};
+
+uniform sampler2D tex;
+
 void main()
 {
   outColor = vec4(0.0, 0.0, 0.0, 0.0);
@@ -61,4 +72,6 @@ void main()
         }
       outColor += (am + diff + spec);
     }
+
+  outColor = texture(tex, texCoordToFrag) * outColor;
 }

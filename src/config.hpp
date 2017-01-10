@@ -17,6 +17,20 @@ namespace dmp
   static const float farZ = 1000.0f;
 
   static const size_t maxLights = 8;
+
+  static const char * basicShader = "res/shaders/basic";
+
+  static const char * skyBox[6] = {
+    "res/textures/skyRight.tga",
+    "res/textures/skyLeft.tga",
+    "res/textures/skyUp.tga",
+    "res/textures/skyDown.tga",
+    "res/textures/skyBack.tga",
+    "res/textures/skyFront.tga"
+  };
+
+  static const char * testTexture = "res/textures/test.jpg";
+
 }
 
 #endif
