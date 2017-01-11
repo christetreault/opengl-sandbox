@@ -132,7 +132,7 @@ void dmp::buildScene(dmp::Scene & scene)
 
   loadTestModel(verts, idxs);
 
-  scene.objects.emplace_back(verts, idxs, GL_TRIANGLES, 0, 0);
+  scene.objects.emplace_back(verts, idxs, GL_TRIANGLES, 0, 1);
   scene.objects.emplace_back(triVerts, triIdxs, GL_TRIANGLES, 1, 0);
 
   sortByMaterial(scene.objects);
@@ -166,6 +166,8 @@ void dmp::buildScene(dmp::Scene & scene)
 
 
   std::string tex(testTexture);
+  scene.textures.emplace_back(tex);
+  tex = "";
   scene.textures.emplace_back(tex);
 
   scene.materialConstants =

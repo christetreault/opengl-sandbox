@@ -29,8 +29,6 @@ layout (std140) uniform ObjectConstants
 {
   mat4 M;
   mat4 normalM;
-
-  bool isTextured;
 };
 
 out vec4 normalToFrag;

@@ -4,40 +4,12 @@
 
 dmp::Object::Object(std::vector<ObjectVertex> verts,
                     GLenum format,
-                    size_t matIdx)
-{
-  mHasIndices = false;
-  mPrimFormat = format;
-  mMaterialIdx = matIdx;
-  mIsTextured = false;
-  mTextureIdx = 0;
-
-  initObject(&verts, nullptr);
-}
-
-dmp::Object::Object(std::vector<ObjectVertex> verts,
-                    std::vector<GLuint> idxs,
-                    GLenum format,
-                    size_t matIdx)
-{
-  mHasIndices = true;
-  mPrimFormat = format;
-  mMaterialIdx = matIdx;
-  mIsTextured = false;
-  mTextureIdx = 0;
-
-  initObject(&verts, &idxs);
-}
-
-dmp::Object::Object(std::vector<ObjectVertex> verts,
-                    GLenum format,
                     size_t matIdx,
                     size_t texIdx)
 {
   mHasIndices = false;
   mPrimFormat = format;
   mMaterialIdx = matIdx;
-  mIsTextured = true;
   mTextureIdx = texIdx;
 
   initObject(&verts, nullptr);
@@ -52,7 +24,6 @@ dmp::Object::Object(std::vector<ObjectVertex> verts,
   mHasIndices = true;
   mPrimFormat = format;
   mMaterialIdx = matIdx;
-  mIsTextured = true;
   mTextureIdx = texIdx;
 
   initObject(&verts, &idxs);

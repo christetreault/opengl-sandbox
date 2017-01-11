@@ -20,11 +20,30 @@ void dmp::Texture::initTexture(std::string & path)
   expectNoErrors("texture filtering");
 
   int width, height, channels;
-  unsigned char * data = stbi_load(path.c_str(),
-                                   &width,
-                                   &height,
-                                   &channels,
-                                   4); // TODO: revisit this
+  unsigned char noTex[4] =
+    {
+      (unsigned char) 0xFF,
+      (unsigned char) 0xFF,
+      (unsigned char) 0xFF,
+      (unsigned char) 0xFF
+    };
+
+  unsigned char * data;
+  if (path == "")
+    {
+      data = noTex;
+      width = 1;
+      height = 1;
+      channels = 4;
+    }
+  else
+    {
+      data = stbi_load(path.c_str(),
+                       &width,
+                       &height,
+                       &channels,
+                       4); // TODO: revisit this
+    }
 
   ifDebug(if (data == nullptr)
             {
@@ -49,7 +68,7 @@ void dmp::Texture::initTexture(std::string & path)
   glGenerateMipmap(GL_TEXTURE_2D);
   expectNoErrors("generate mipmaps");
 
-  stbi_image_free(data);
+  if (path != "") stbi_image_free(data);
   glBindTexture(GL_TEXTURE_2D, 0);
 
   expectNoErrors("initialize Texture");

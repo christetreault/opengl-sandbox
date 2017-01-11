@@ -146,13 +146,11 @@ void dmp::Renderer::render(const Scene & scene, const Timer & timer)
           scene.materialConstants->bind(2, materialIndex);
         }
 
-       if (scene.objects[i].isTextured())
-         {
-           glActiveTexture(GL_TEXTURE0);
-           glBindTexture(GL_TEXTURE_2D,
-                         scene.textures[scene.objects[i].textureIndex()]);
-           glUniform1i(glGetUniformLocation(mShaderProg, "tex"), 0);
-         }
+      glActiveTexture(GL_TEXTURE0);
+      glBindTexture(GL_TEXTURE_2D,
+                    scene.textures[scene.objects[i].textureIndex()]);
+      glUniform1i(glGetUniformLocation(mShaderProg, "tex"), 0);
+
 
       scene.objectConstants->bind(3, i);
 

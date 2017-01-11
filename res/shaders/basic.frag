@@ -42,8 +42,6 @@ layout (std140) uniform ObjectConstants
 {
   mat4 M;
   mat4 normalM;
-
-  bool isTextured;
 };
 
 uniform sampler2D tex;
@@ -70,8 +68,8 @@ void main()
             * specular
             * pow(max(dot(normalToFrag, hlf), 0.0), shininess);
         }
-      outColor += (/*am*/ + diff + spec);
+      outColor += (am + diff + spec);
     }
 
-  if (isTextured) outColor = texture(tex, texCoordToFrag) * outColor;
+  outColor = texture(tex, texCoordToFrag) * outColor;
 }
