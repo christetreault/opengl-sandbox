@@ -16,7 +16,9 @@ static void errorCb(int error, const char * description)
 
 dmp::Program::Program(int width, int height, const char * title)
   : mWindow(width, height, title),
-    mRenderer((GLsizei) width, (GLsizei) height, basicShader),
+    mRenderer((GLsizei) mWindow.getFramebufferWidth(),
+              (GLsizei) mWindow.getFramebufferHeight(),
+              basicShader),
     mTimer()
 {
   mWindow.keyFn = [](GLFWwindow * w,
@@ -43,6 +45,13 @@ dmp::Program::Program(int width, int height, const char * title)
       int fbWidth, fbHeight;
       glfwGetFramebufferSize(w, &fbWidth, &fbHeight);
       mRenderer.resize((GLsizei) fbWidth, (GLsizei) fbHeight);
+    };
+
+  mWindow.windowFrameBufferResizeFn = [&](GLFWwindow * w,
+                                          int width,
+                                          int height)
+    {
+      mRenderer.resize((GLsizei) width, (GLsizei) height);
     };
 
   glfwSetErrorCallback(errorCb);

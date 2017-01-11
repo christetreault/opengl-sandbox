@@ -22,6 +22,20 @@ namespace dmp
 
     void updateFPS(size_t fps, size_t mspf);
 
+    int getFramebufferWidth() const
+    {
+      int w, h;
+      glfwGetFramebufferSize(mWindow, &w, &h);
+      return w;
+    }
+
+    int getFramebufferHeight() const
+    {
+      int w, h;
+      glfwGetFramebufferSize(mWindow, &w, &h);
+      return h;
+    }
+
     // Input
     std::function<void(GLFWwindow *, int, int, int)> mouseButtonFn;
     std::function<void(GLFWwindow *, double, double)> cursorPosFn;
