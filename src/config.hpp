@@ -30,7 +30,6 @@ namespace dmp
   };
 
   static const char * testTexture = "res/textures/test.jpg";
-  static const char * noTex = "res/textures/noTex.jpg";
 
 }
 
