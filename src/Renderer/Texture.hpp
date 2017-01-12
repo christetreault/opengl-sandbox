@@ -3,7 +3,6 @@
 
 #include <string>
 #include <GL/glew.h>
-#include "../ext/stb_image.h"
 #include "../util.hpp"
 
 namespace dmp
@@ -37,6 +36,8 @@ namespace dmp
     GLuint mTexId = 0;
     bool mValid = false;
   };
+
+  inline GLuint texUnitAsInt(GLenum t) {return t - GL_TEXTURE0;}
 }
 
 #endif

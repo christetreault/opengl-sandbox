@@ -21,7 +21,7 @@ endif
 LIB_DEFINES = $(GLM_DEFINES)
 
 OBJ_FILES = main.o Window.o Renderer.o Shader.o Program.o Timer.o Object.o \
-Scene.o UniformBuffer.o Graph.o Pass.o Texture.o Camera.o
+Scene.o UniformBuffer.o Graph.o Pass.o Texture.o Camera.o Skybox.o
 
 PKG_CONFIG_LIBS = glfw3 glew assimp
 MANUAL_LIBS =
@@ -91,6 +91,9 @@ Texture.o : $(SRC_DIR)/Renderer/Texture.cpp $(SRC_DIR)/Renderer/Texture.hpp
 
 Camera.o : $(SRC_DIR)/Scene/Camera.cpp $(SRC_DIR)/Scene/Camera.hpp
 	   $(call compile,Scene/Camera.cpp)
+
+Skybox.o : $(SRC_DIR)/Scene/Skybox.cpp $(SRC_DIR)/Scene/Skybox.hpp
+	   $(call compile,Scene/Skybox.cpp)
 
 rebuild : clean build
 

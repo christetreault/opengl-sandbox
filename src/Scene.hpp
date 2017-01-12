@@ -7,6 +7,7 @@
 #include "Scene/Object.hpp"
 #include "Scene/Graph.hpp"
 #include "Scene/Camera.hpp"
+#include "Scene/Skybox.hpp"
 #include "Renderer/UniformBuffer.hpp"
 #include "Renderer/Texture.hpp"
 
@@ -22,6 +23,7 @@ namespace dmp
     std::vector<Object> objects;
     std::unique_ptr<UniformBuffer> objectConstants;
     std::unique_ptr<Branch> graph;
+    std::unique_ptr<Skybox> skybox;
   };
 
   void buildScene(Scene & scene);

@@ -19,6 +19,7 @@ namespace dmp
   static const size_t maxLights = 8;
 
   static const char * basicShader = "res/shaders/basic";
+  static const char * skyboxShader = "res/shaders/skybox";
 
   static const char * skyBox[6] = {
     "res/textures/skyRight.tga",

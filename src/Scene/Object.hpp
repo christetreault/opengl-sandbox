@@ -54,14 +54,6 @@ namespace dmp
 
     Object(std::vector<ObjectVertex> verts,
            GLenum format,
-           size_t matIdx);
-    Object(std::vector<ObjectVertex> verts,
-           std::vector<GLuint> idxs,
-           GLenum format,
-           size_t matIdx);
-
-    Object(std::vector<ObjectVertex> verts,
-           GLenum format,
            size_t matIdx,
            size_t texIdx);
     Object(std::vector<ObjectVertex> verts,

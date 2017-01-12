@@ -1,6 +1,7 @@
 #include "Texture.hpp"
 
 #include "../util.hpp"
+#include "../ext/stb_image.h"
 #include <iostream>
 
 void dmp::Texture::initTexture(std::string & path)

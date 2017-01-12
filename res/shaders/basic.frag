@@ -26,8 +26,6 @@ layout (std140) uniform PassConstants
   float farZ;
   float deltaT;
   float totalT;
-
-
 };
 
 layout (std140) uniform MaterialConstants

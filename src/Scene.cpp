@@ -220,7 +220,7 @@ void dmp::buildScene(dmp::Scene & scene)
 
   rotateY->insert(scene.objects[0]);
   antiY->insert(scene.lights[0]);
-  scene.graph->insert(scene.objects[0]);
+  scene.graph->insert(scene.objects[1]);
 
   scene.cameras.emplace_back();
   scene.graph->insert(scene.cameras[0].focus());
@@ -229,6 +229,11 @@ void dmp::buildScene(dmp::Scene & scene)
   scene.objectConstants
     = std::make_unique<UniformBuffer>(scene.objects.size(),
                                       ObjectConstants::std140Size());
+
+  std::vector<const char *> sb;
+  for (size_t i = 0; i < 6; ++i) sb.push_back(skyBox[i]);
+
+  scene.skybox = std::make_unique<Skybox>(sb);
 
   scene.graph->update(0.0f, glm::mat4(), true);
 }
@@ -263,4 +268,11 @@ void dmp::freeScene(dmp::Scene & scene)
     {
       curr.freeObject();
     }
+
+  for (auto & curr : scene.textures)
+    {
+      curr.freeTexture();
+    }
+
+  scene.skybox->freeSkybox();
 }

@@ -55,6 +55,7 @@ void dmp::Renderer::initRenderer()
   expectNoErrors("init glew");
   // end yuckiness
 
+  glDepthMask(GL_TRUE);
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LEQUAL);
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -97,10 +98,6 @@ void dmp::Renderer::render(const Scene & scene, const Timer & timer)
 
   size_t materialIndex = scene.objects[0].materialIndex();
 
-  glUseProgram(mShaderProg);
-
-  expectNoErrors("Bind shader program");
-
   // Pass constants
 
   PassConstants pc = {};
@@ -138,6 +135,19 @@ void dmp::Renderer::render(const Scene & scene, const Timer & timer)
   GLuint ocIdx = glGetUniformBlockIndex(mShaderProg, "ObjectConstants");
   glUniformBlockBinding(mShaderProg, ocIdx, 3);
 
+  // TODO: this should be last
+  glDepthMask(GL_FALSE);
+  expect("skybox not null", scene.skybox);
+  scene.skybox->bind(GL_TEXTURE0);
+  scene.skybox->draw();
+  expectNoErrors("Draw skybox");
+  glDepthMask(GL_TRUE);
+
+
+  glUseProgram(mShaderProg);
+
+  expectNoErrors("Bind shader program");
+
   for (size_t i = 0; i < scene.objects.size(); ++i)
     {
       if (scene.objects[i].materialIndex() != materialIndex)
@@ -149,7 +159,8 @@ void dmp::Renderer::render(const Scene & scene, const Timer & timer)
       glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_2D,
                     scene.textures[scene.objects[i].textureIndex()]);
-      glUniform1i(glGetUniformLocation(mShaderProg, "tex"), 0);
+      glUniform1i(glGetUniformLocation(mShaderProg, "tex"),
+                  texUnitAsInt(GL_TEXTURE0));
 
 
       scene.objectConstants->bind(3, i);
@@ -159,4 +170,5 @@ void dmp::Renderer::render(const Scene & scene, const Timer & timer)
       scene.objects[i].bind();
       scene.objects[i].draw();
     }
+
 }
