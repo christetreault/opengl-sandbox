@@ -107,37 +107,20 @@ static void loadTestModel(std::vector<ObjectVertex> & verts,
   std::cerr << "done!" << std::endl;
 }
 
-void dmp::buildScene(dmp::Scene & scene)
+void dmp::Scene::build(std::function<bool(glm::mat4 &, float)> cameraFn)
 {
-  scene.graph = std::make_unique<Branch>();
-
-  std::vector<ObjectVertex> triVerts(0);
-  triVerts.push_back({
-      glm::vec4(-1000.0f, 1000.0f, -100.0f, 1.0f),
-        glm::vec4(0.0f, 0.0f, 1.0f, 0.0f),
-        glm::vec2(0.0f, 0.0f)});
-  triVerts.push_back({
-      glm::vec4(1000.0f, 1000.0f, -100.0f, 1.0f),
-        glm::vec4(0.0f, 0.0f, 1.0f, 0.0f),
-        glm::vec2(1.0f, 0.0f)});
-  triVerts.push_back({
-      glm::vec4(0.0f, -1000.0f, -100.0f, 1.0f),
-        glm::vec4(0.0f, 0.0f, 1.0f, 0.0f),
-        glm::vec2(0.5f, 1.0f)});
-  std::vector<GLuint> triIdxs = {0,2,1};
-
+  graph = std::make_unique<Branch>();
 
   std::vector<ObjectVertex> verts(0);
   std::vector<GLuint> idxs(0);
 
   loadTestModel(verts, idxs);
 
-  scene.objects.emplace_back(verts, idxs, GL_TRIANGLES, 0, 1);
-  scene.objects.emplace_back(triVerts, triIdxs, GL_TRIANGLES, 1, 0);
+  objects.emplace_back(verts, idxs, GL_TRIANGLES, 0, 0);
 
-  sortByMaterial(scene.objects);
+  sortByMaterial(objects);
 
-  scene.materials.push_back(
+  materials.push_back( // Pearl = 0
     {
       {
         0.1745f, 0.01175f, 0.01175f, 1.0f
@@ -150,7 +133,7 @@ void dmp::buildScene(dmp::Scene & scene)
       },
       0.6f
     });
-  scene.materials.push_back(
+  materials.push_back( // Ruby = 1
     {
       {
         0.25f, 0.20725f, 0.20725f, 1.0f
@@ -164,29 +147,30 @@ void dmp::buildScene(dmp::Scene & scene)
       0.088f
     });
 
+  std::string tex("");
+  textures.emplace_back(tex);
 
-  std::string tex(testTexture);
-  scene.textures.emplace_back(tex);
-  tex = "";
-  scene.textures.emplace_back(tex);
-
-  scene.materialConstants =
-    std::make_unique<UniformBuffer>(scene.materials.size(),
+  materialConstants =
+    std::make_unique<UniformBuffer>(materials.size(),
                                     Material::std140Size());
 
-  for (size_t i = 0; i < scene.materials.size(); ++i)
+  for (size_t i = 0; i < materials.size(); ++i)
     {
-      scene.materialConstants->update(i,
-                                      scene.materials[i]);
+      materialConstants->update(i, materials[i]);
     }
 
-  scene.lights.push_back({
+  lights.push_back({
       {1.0f, 1.0f, 1.0f, 1.0f},
       {0.0f, -0.1f, 1.0f, 0.0f},
       glm::mat4()
     });
+  lights.push_back({
+      {0.1f, 0.1f, 0.1f, 1.0f},
+      {0.0f, -1.0f, 0.1f, 0.0f},
+      glm::mat4()
+    });
 
-  auto rotateY = scene.graph->transform([](glm::mat4 & M, float deltaT)
+  auto rotateY = graph->transform([](glm::mat4 & M, float deltaT)
     {
       M = glm::rotate(M,
                       deltaT / 2.0f,
@@ -195,7 +179,7 @@ void dmp::buildScene(dmp::Scene & scene)
       return true;
     });
 
-  auto antiY = scene.graph->transform([](glm::mat4 & M, float deltaT)
+  auto antiY = graph->transform([](glm::mat4 & M, float deltaT)
     {
       M = glm::rotate(M,
                       -(deltaT / 2.0f),
@@ -203,76 +187,61 @@ void dmp::buildScene(dmp::Scene & scene)
 
       return true;
     });
-  auto back400 = scene.graph->transform(glm::translate(glm::mat4(),
-                                                       {0.0f, 0.0f, 400.0f}));
+  auto cam = graph->transform(cameraFn);
 
-  auto backRotate = back400->transform([](glm::mat4 & M, float deltaT)
-    {
-      M = glm::rotate(M,
-                      deltaT / 4.0f,
-                      glm::vec3(0.0f, 1.0f, 0.0f));
+  rotateY->insert(objects[0]);
+  antiY->insert(lights[0]);
+  graph->insert(lights[1]);
 
-      return true;
-    });
+  cameras.emplace_back();
+  graph->insert(cameras[0].focus());
+  cam->insert(cameras[0].pos());
 
-  auto back200 = backRotate->transform(glm::translate(glm::mat4(),
-                                                     {0.0f, 0.0f, 200.0f}));
-
-  rotateY->insert(scene.objects[0]);
-  antiY->insert(scene.lights[0]);
-  scene.graph->insert(scene.objects[1]);
-
-  scene.cameras.emplace_back();
-  scene.graph->insert(scene.cameras[0].focus());
-  back200->insert(scene.cameras[0].pos());
-
-  scene.objectConstants
-    = std::make_unique<UniformBuffer>(scene.objects.size(),
+  objectConstants
+    = std::make_unique<UniformBuffer>(objects.size(),
                                       ObjectConstants::std140Size());
 
   std::vector<const char *> sb;
   for (size_t i = 0; i < 6; ++i) sb.push_back(skyBox[i]);
 
-  scene.skybox = std::make_unique<Skybox>(sb);
+  skybox = std::make_unique<Skybox>(sb);
 
-  scene.graph->update(0.0f, glm::mat4(), true);
+  graph->update(0.0f, glm::mat4(), true);
 }
 
-void dmp::updateScene(dmp::Scene & scene,
-                      float deltaT)
+void dmp::Scene::update(float deltaT)
 {
   expect("Object constant buffer not null",
-         scene.objectConstants);
+         objectConstants);
 
-  scene.graph->update(deltaT);
+  graph->update(deltaT);
 
-  for (size_t i = 0; i < scene.objects.size(); ++i)
+  for (size_t i = 0; i < objects.size(); ++i)
     {
-      if (scene.objects[i].isDirty())
+      if (objects[i].isDirty())
         {
-          scene.objectConstants->update(i,
-                                        scene.objects[i].getObjectConstants());
-          scene.objects[i].setClean();
+          objectConstants->update(i, objects[i].getObjectConstants());
+          objects[i].setClean();
         }
     }
 
-  for (auto & curr : scene.cameras)
+  for (auto & curr : cameras)
     {
       curr.update();
     }
 }
 
-void dmp::freeScene(dmp::Scene & scene)
+void dmp::Scene::free()
 {
-  for (auto & curr : scene.objects)
+  for (auto & curr : objects)
     {
       curr.freeObject();
     }
 
-  for (auto & curr : scene.textures)
+  for (auto & curr : textures)
     {
       curr.freeTexture();
     }
 
-  scene.skybox->freeSkybox();
+  skybox->freeSkybox();
 }

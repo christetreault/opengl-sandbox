@@ -24,12 +24,11 @@ namespace dmp
     std::unique_ptr<UniformBuffer> objectConstants;
     std::unique_ptr<Branch> graph;
     std::unique_ptr<Skybox> skybox;
-  };
 
-  void buildScene(Scene & scene);
-  void updateScene(Scene & scene,
-                   float deltaT);
-  void freeScene(Scene & scene);
+    void build(std::function<bool(glm::mat4 &, float)> cameraFn);
+    void update(float deltaT);
+    void free();
+  };
 }
 
 #endif

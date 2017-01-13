@@ -103,8 +103,10 @@ void dmp::Renderer::render(const Scene & scene, const Timer & timer)
   PassConstants pc = {};
 
   pc.lightColor[0] = scene.lights[0].color;
+  pc.lightColor[1] = scene.lights[1].color;
   pc.lightDir[0] = scene.lights[0].M * scene.lights[0].dir;
-  pc.numLights = 1;
+  pc.lightDir[1] = scene.lights[1].M * scene.lights[1].dir;
+  pc.numLights = 2;
 
   pc.P = mP;
   pc.invP = glm::inverse(pc.P);

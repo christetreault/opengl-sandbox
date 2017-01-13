@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <limits>
 #include <GL/glew.h>
+#include <limits>
 
 // Exectue a statement IFF built in release mode (NDEBUG is definend)
 // define ifRelease
@@ -221,6 +222,12 @@ namespace dmp
       }
 
     throw dmp::InvariantViolation(msg);
+  }
+
+  inline bool roughEq(float lhs, float rhs)
+  {
+    return ((float) fabs((double)(lhs - rhs))
+            < std::numeric_limits<float>::epsilon());
   }
 }
 

@@ -1,6 +1,7 @@
 #ifndef DMP_PROGRAM_HPP
 #define DMP_PROGRAM_HPP
 
+#include <map>
 #include "Window.hpp"
 #include "Renderer.hpp"
 #include "util.hpp"
@@ -13,7 +14,7 @@ namespace dmp
   {
   public:
     Program() = delete;
-    ~Program() = default;
+    ~Program();
     Program(const Program &) = delete;
     Program & operator=(const Program &) = delete;
     Program(Program &&) = default;
@@ -26,6 +27,7 @@ namespace dmp
     Renderer mRenderer;
     Timer mTimer;
     Scene mScene;
+    std::map<std::string, float> mCameraState;
   };
 }
 #endif

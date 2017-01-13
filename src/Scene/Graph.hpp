@@ -8,7 +8,6 @@
 #include <memory>
 #include "Object.hpp"
 #include "Camera.hpp"
-#include <glm/gtc/matrix_transform.hpp>
 
 namespace dmp
 {

@@ -17,6 +17,7 @@ namespace dmp
     Renderer & operator=(const Renderer &) = delete;
     Renderer(Renderer && other) = default;
     Renderer & operator=(Renderer && other) = default;
+    ~Renderer() = default;
 
     Renderer(GLsizei width, GLsizei height, const std::string shaderFile);
     void resize(GLsizei width, GLsizei height);
