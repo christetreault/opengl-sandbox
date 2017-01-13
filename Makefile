@@ -8,7 +8,7 @@ RES_DIR = res
 SHADER_DIR = $(RES_DIR)/shaders
 
 CXX = g++
-CXX_FLAGS = -g -Wall -Wconversion -std=c++14 -Ofast -MD -MP \
+CXX_FLAGS = -g -Wall -std=c++14 -Ofast -MD -MP \
 $(BUILD_MODE_FLAGS) $(LIB_DEFINES)
 
 ifeq ($(OS_NAME), Linux)
