@@ -9,6 +9,10 @@
 #include <limits>
 #include <GL/glew.h>
 #include <limits>
+#include <math.h>
+#include <map>
+#include <boost/assert.hpp>
+#include <glm/gtx/string_cast.hpp>
 
 // Exectue a statement IFF built in release mode (NDEBUG is definend)
 // define ifRelease
@@ -35,7 +39,7 @@
 #ifndef NDEBUG    // if (not debug not defined)
 #define ifDebug(_e)                             \
   {                                             \
-    _e;                                         \
+    _e;                                       \
   }
 #else
 #define ifDebug(_e) {}
@@ -55,9 +59,21 @@
 #error expect already defined!
 #endif
 
+#ifndef safeIncr
+#define safeIncr(_begin, _end)                                          \
+  {                                                                     \
+    auto & _evalBegin = (_begin);                                       \
+    auto & _evalEnd = (_end);                                           \
+    expect("Iterator not equal to end", _evalBegin != _evalEnd);        \
+    ++_evalBegin;                                                       \
+  }
+#else
+#error safeIncr already defined!
+#endif
+
 #ifndef unreachable
 #define unreachable(_msg)                                                \
-  {                                                                          \
+  {                                                                      \
     throw dmp::InvariantViolation("Unreachable code executed, this should be impossible: " _msg, __FILE__, __LINE__); \
   }
 #else
@@ -94,6 +110,22 @@ namespace dmp
                          + file
                          + "\nAt Line: "
                          + std::to_string(line));
+    }
+
+    InvariantViolation(const std::vector<InvariantViolation> & vs)
+    {
+      mMsg = "Multiple Violations!\n";
+
+      for (const auto & curr : vs)
+        {
+          mMsg += curr.mMsg + "\n";
+        }
+    }
+
+    InvariantViolation(const std::exception & e)
+    {
+      mMsg = "Rethrowing std::exception: "
+        + std::string(e.what());
     }
 
     InvariantViolation(std::string msg)
@@ -224,10 +256,82 @@ namespace dmp
     throw dmp::InvariantViolation(msg);
   }
 
-  inline bool roughEq(float lhs, float rhs)
+  inline bool roughEq(float lhs, float rhs,
+                      float epsilon = std::numeric_limits<float>::epsilon())
   {
     return ((float) fabs((double)(lhs - rhs))
-            < std::numeric_limits<float>::epsilon());
+            < epsilon);
+  }
+
+  inline float mod(float lhs, float rhs)
+  {
+    if (rhs == 0.0f) return rhs;
+    auto m = fmodf(lhs, rhs);
+    if (m < 0.0f) m += rhs;
+    return m;
+  }
+
+  template <typename K, typename T>
+  void mapUnion(const std::map<K, T> & lhs,
+                const std::map<K, T> & rhs,
+                std::function<T(const T & l, const T & r)> conflictFn,
+                std::map<K, T> & resMap)
+  {
+    for (const auto & curr : lhs)
+      {
+        if (rhs.find(curr.first) == rhs.end())
+          {
+            // lhs element is not in rhs. Take it
+            resMap.insert(curr);
+          }
+        else
+          {
+            // rhs map has an element at the same key as this lhs
+            // element. Call the conflictFn
+            resMap.insert(std::make_pair(curr.first,
+                                         conflictFn(curr.second,
+                                                    rhs.at(curr.first))));
+          }
+      }
+
+    // At this point, resMap contains:
+    // - all elements of lhs that are not in rhs
+    // - all elements that are in both lhs and rhs, resolved by conflictFn
+
+    for (const auto & curr : rhs)
+      {
+
+        if (resMap.find(curr.first) != resMap.end())
+          {
+            // if resMap contains the current key, that means that this element
+            // had a corresponding element in lhs, and the conflictFn
+            // was called, skip this element
+            continue;
+          }
+        else
+          {
+            // If resMap does not contain the current key, that means that this
+            // key only appears in rhs. Take it.
+            resMap.insert(curr);
+          }
+      }
+
+    // Union should be complete at this point
+  }
+}
+
+#define BOOST_ENABLE_ASSERT_HANDLER
+namespace boost
+{
+  inline void assertion_failed(char const * expr,
+                        char const * function,
+                        char const * file,
+                        long line)
+  {
+    std::string msg = std::string("Boost assert failure! Expression: "
+                                  + std::string(expr)
+                                  + " Function: " + std::string(function));
+    throw dmp::InvariantViolation(msg, file, (int) line);
   }
 }
 

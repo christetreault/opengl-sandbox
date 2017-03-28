@@ -12,10 +12,17 @@
 
 namespace dmp
 {
+  class Model;
+
+  enum Shape
+    {
+      Cube
+    };
+
   struct ObjectVertex
   {
-    glm::vec4 position;
-    glm::vec4 normal;
+    glm::vec3 position;
+    glm::vec3 normal;
     glm::vec2 texCoords;
   };
 
@@ -36,10 +43,8 @@ namespace dmp
   {
   public:
     Object() = delete;
-    Object(const Object &) = delete;
-    Object & operator=(const Object &) = delete;
-    Object(Object &&) = default;
-    Object & operator=(Object &&) = default;
+    Object(const Object &) = default;
+    Object & operator=(const Object &) = default;
 
     ~Object() {}
 
@@ -50,7 +55,16 @@ namespace dmp
       glDeleteVertexArrays(1, &mVAO);
       glDeleteBuffers(1, &mVBO);
       if (mHasIndices) glDeleteBuffers(1, &mEBO);
+
+      mValid = false;
     }
+
+    Object(std::vector<ObjectVertex> verts,
+           std::vector<GLuint> idxs,
+           GLenum format,
+           size_t matIdx,
+           size_t texIdx,
+           GLenum drawMode);
 
     Object(std::vector<ObjectVertex> verts,
            GLenum format,
@@ -62,7 +76,10 @@ namespace dmp
            size_t matIdx,
            size_t texIdx);
 
-    bool isDirty() const {return mDirty;}
+    Object(Shape shape, glm::vec4 min, glm::vec4 max,
+           size_t matIdx, size_t texIdx);
+
+    bool isDirty() const {return mDirty && mVisible;}
     void setClean() {mDirty = false;}
     void setM(glm::mat4 M)
     {
@@ -78,40 +95,37 @@ namespace dmp
       expectNoErrors("Bind object");
     }
 
-    void draw() const
-    {
-      expect("Object valid", mValid);
-      if (mHasIndices)
-        {
-          glDrawElements(mPrimFormat,
-                         drawCount,
-                         GL_UNSIGNED_INT,
-                         0); // TODO: whats up with this parameter? (its a pointer)
-        }
-      else
-        {
-          glDrawArrays(mPrimFormat,
-                       0,
-                       drawCount);
-        }
-      expectNoErrors("Draw object");
-    }
+    void draw() const;
 
-    ObjectConstants getObjectConstants() const
-    {
-      ObjectConstants retVal =
-        {
-          mM,
-          glm::mat4(glm::transpose(glm::inverse(glm::mat3(mM))))
-        };
-
-      return retVal;
-    }
+    ObjectConstants getObjectConstants() const;
+    void tellBindingMats(const std::vector<glm::mat4> & mats);
+    void clearBindingMats();
 
     glm::mat4 getM() const {return mM;}
 
     size_t materialIndex() const {return mMaterialIdx;}
     size_t textureIndex() const {return mTextureIdx;}
+
+    static void sortByMaterial(std::vector<Object *> & objs);
+
+    void show()
+    {
+      if (mVisible) return;
+      mVisible = true;
+      mDirty = true;
+    };
+
+    void hide()
+    {
+      mVisible = false;
+    }
+
+    // memory maps the VBO, calls updateFn and then unmaps the VBO
+    // - data is a pointer to the data buffer
+    // - numElems is the number of elements in the mapped buffer
+    // CONTRACT: drawType must be dynamic draw
+    void updateVertices(std::function<void(ObjectVertex * data,
+                                           size_t numElems)> updateFn);
 
   private:
     void initObject(std::vector<ObjectVertex> * verts,
@@ -128,13 +142,15 @@ namespace dmp
     bool mValid = false;
     size_t mMaterialIdx;
     size_t mTextureIdx;
+    size_t mNumVerts;
 
     GLsizei drawCount;
+    bool mVisible = true;
 
-    friend void sortByMaterial(std::vector<Object> & objs);
+    std::vector<glm::mat4> mBindingMats;
+
+    GLenum mDrawMode = GL_STATIC_DRAW;
   };
-
-  void sortByMaterial(std::vector<Object> & objs);
 }
 
 #endif

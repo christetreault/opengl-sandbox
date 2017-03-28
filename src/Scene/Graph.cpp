@@ -42,28 +42,28 @@ void Container::updateImpl(float deltaT, glm::mat4 M, bool dirty)
 // Transform
 // -----------------------------------------------------------------------------
 
-Container * Transform::insert(Object & o)
+Object * Transform::insert(Object o)
 {
   mChild = std::make_unique<Container>(o);
-  return (Container *) mChild.get();
+  return &(boost::get<Object>(((Container *) mChild.get())->mValue));
 }
 
-Container * Transform::insert(Light & l)
+Light * Transform::insert(Light & l)
 {
   mChild = std::make_unique<Container>(l);
-  return (Container *) mChild.get();
+  return &(boost::get<Light &>(((Container *) mChild.get())->mValue));
 }
 
-Container * Transform::insert(CameraPos & c)
+CameraPos * Transform::insert(CameraPos & c)
 {
   mChild = std::make_unique<Container>(c);
-  return (Container *) mChild.get();
+  return &(boost::get<CameraPos &>(((Container *) mChild.get())->mValue));
 }
 
-Container * Transform::insert(CameraFocus & c)
+CameraFocus * Transform::insert(CameraFocus & c)
 {
   mChild = std::make_unique<Container>(c);
-  return (Container *) mChild.get();
+  return &(boost::get<CameraFocus>(((Container *) mChild.get())->mValue));
 }
 
 Node * Transform::insert(std::unique_ptr<Node> & n)
@@ -87,11 +87,12 @@ Transform * Transform::transform()
 Transform * Transform::transform(glm::mat4 t)
 {
   auto p = std::make_unique<Transform>();
-  p->mTransform = t;
+  p->mTransformResult = t;
+  p->mUpdateFn = noTransform;
   return insert(p);
 }
 
-Transform * Transform::transform(std::function<bool(glm::mat4 &, float)> f)
+Transform * Transform::transform(TransformFn f)
 {
   auto p = std::make_unique<Transform>();
   p->mUpdateFn = f;
@@ -99,10 +100,30 @@ Transform * Transform::transform(std::function<bool(glm::mat4 &, float)> f)
 }
 
 Transform * Transform::transform(glm::mat4 t,
-                                 std::function<bool(glm::mat4 &, float)> f)
+                                 TransformFn f)
 {
   auto p = std::make_unique<Transform>();
-  p->mTransform = t;
+  p->mMatrixTransformState = t;
+  p->mUpdateFn = f;
+  return insert(p);
+}
+
+Transform * Transform::transform(glm::quat q,
+                                 TransformFn f)
+{
+  auto p = std::make_unique<Transform>();
+  p->mUpdateFn = f;
+  p->mQuatRotationState = q;
+  return insert(p);
+}
+
+Transform * Transform::transform(glm::quat q,
+                                 glm::mat4 t,
+                                 TransformFn f)
+{
+  auto p = std::make_unique<Transform>();
+  p->mMatrixTransformState = t;
+  p->mQuatRotationState = q;
   p->mUpdateFn = f;
   return insert(p);
 }
@@ -125,6 +146,22 @@ Container * Transform::insert(std::unique_ptr<Container> & c)
   return (Container *) mChild.get();
 }
 
+void dmp::Transform::updateImpl(float deltaT, glm::mat4 M, bool inDirty)
+{
+  expect("updateFn not null", mUpdateFn);
+  auto result = mUpdateFn(mMatrixTransformState, mQuatRotationState, deltaT);
+  bool outDirty = inDirty;
+  if (result)
+    {
+      mTransformResult = *result;
+      outDirty = true;
+    }
+  //bool outDirty = mUpdateFn(mTransform, mQuatRotation, deltaT) || inDirty;
+  //glm::mat4 outM = M * mTransform * ((glm::mat4) mQuatRotation);
+  auto outM = M * mTransformResult;
+  if (mChild) mChild->update(deltaT, outM, outDirty);
+}
+
 // -----------------------------------------------------------------------------
 // Branch
 // -----------------------------------------------------------------------------
@@ -141,20 +178,15 @@ Transform * Branch::insert(std::unique_ptr<Transform> & t)
   return (Transform *) mChildren.back().get();
 }
 
-Transform * Branch::transform()
-{
-  auto p = std::make_unique<Transform>();
-  return insert(p);
-}
-
 Transform * Branch::transform(glm::mat4 t)
 {
   auto p = std::make_unique<Transform>();
-  p->mTransform = t;
+  p->mTransformResult = t;
+  p->mUpdateFn = noTransform;
   return insert(p);
 }
 
-Transform * Branch::transform(std::function<bool(glm::mat4 &, float)> f)
+Transform * Branch::transform(TransformFn f)
 {
   auto p = std::make_unique<Transform>();
   p->mUpdateFn = f;
@@ -162,10 +194,30 @@ Transform * Branch::transform(std::function<bool(glm::mat4 &, float)> f)
 }
 
 Transform * Branch::transform(glm::mat4 t,
-                              std::function<bool(glm::mat4 &, float)> f)
+                              TransformFn f)
 {
   auto p = std::make_unique<Transform>();
-  p->mTransform = t;
+  p->mMatrixTransformState = t;
+  p->mUpdateFn = f;
+  return insert(p);
+}
+
+Transform * Branch::transform(glm::quat q,
+                              TransformFn f)
+{
+  auto p = std::make_unique<Transform>();
+  p->mQuatRotationState = q;
+  p->mUpdateFn = f;
+  return insert(p);
+}
+
+Transform * Branch::transform(glm::quat q,
+                              glm::mat4 t,
+                              TransformFn f)
+{
+  auto p = std::make_unique<Transform>();
+  p->mQuatRotationState = q;
+  p->mMatrixTransformState = t;
   p->mUpdateFn = f;
   return insert(p);
 }
@@ -182,26 +234,26 @@ Container * Branch::insert(std::unique_ptr<Container> & c)
   return (Container *) mChildren.back().get();
 }
 
-Container * Branch::insert(Object & o)
+Object * Branch::insert(Object o)
 {
   mChildren.push_back(std::make_unique<Container>(o));
-  return (Container *) mChildren.back().get();
+  return &(boost::get<Object>(((Container *) mChildren.back().get())->mValue));
 }
 
-Container * Branch::insert(Light & l)
+Light * Branch::insert(Light & l)
 {
   mChildren.push_back(std::make_unique<Container>(l));
-  return (Container *) mChildren.back().get();
+  return &(boost::get<Light &>(((Container *) mChildren.back().get())->mValue));
 }
 
-Container * Branch::insert(CameraPos & c)
+CameraPos * Branch::insert(CameraPos & c)
 {
   mChildren.push_back(std::make_unique<Container>(c));
-  return (Container *) mChildren.back().get();
+  return &(boost::get<CameraPos &>(((Container *) mChildren.back().get())->mValue));
 }
 
-Container * Branch::insert(CameraFocus & c)
+CameraFocus * Branch::insert(CameraFocus & c)
 {
   mChildren.push_back(std::make_unique<Container>(c));
-  return (Container *) mChildren.back().get();
+  return &(boost::get<CameraFocus &>(((Container *) mChildren.back().get())->mValue));
 }

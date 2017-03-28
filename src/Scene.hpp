@@ -20,12 +20,11 @@ namespace dmp
     std::vector<Texture> textures;
     std::vector<Light> lights;
     std::vector<Camera> cameras;
-    std::vector<Object> objects;
+    std::vector<Object *> objects;
     std::unique_ptr<UniformBuffer> objectConstants;
     std::unique_ptr<Branch> graph;
     std::unique_ptr<Skybox> skybox;
 
-    void build(std::function<bool(glm::mat4 &, float)> cameraFn);
     void update(float deltaT);
     void free();
   };

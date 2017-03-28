@@ -4,8 +4,7 @@
 #include "Program.hpp"
 #include "util.hpp"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "ext/stb_image.h"
+#include <glm/glm.hpp>
 
 static void libsInit()
 {
@@ -18,7 +17,7 @@ static void libsFinalize()
   glfwTerminate();
 }
 
-int main(int, char **)
+int main(int argc, char ** argv)
 {
   using namespace dmp;
 

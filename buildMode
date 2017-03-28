@@ -1,0 +1,2 @@
+BUILD_MODE_FLAGS = -g -Og
+BUILD_MODE = Debug

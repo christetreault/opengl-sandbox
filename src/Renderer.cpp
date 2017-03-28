@@ -59,10 +59,10 @@ void dmp::Renderer::initRenderer()
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LEQUAL);
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-  glEnable(GL_CULL_FACE);
-  glCullFace(GL_BACK);
+  //glEnable(GL_CULL_FACE);
+  //glCullFace(GL_BACK);
 
-  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+  glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
   glEnable(GL_PROGRAM_POINT_SIZE);
 
   expectNoErrors("init renderer");
@@ -86,7 +86,9 @@ void dmp::Renderer::initPassConstants()
                                                    PassConstants::std140Size());
 }
 
-void dmp::Renderer::render(const Scene & scene, const Timer & timer)
+void dmp::Renderer::render(const Scene & scene,
+                           const Timer & timer,
+                           const RenderOptions & ro)
 {
   expect("Scene Object Constants not null",
          scene.objectConstants);
@@ -94,9 +96,12 @@ void dmp::Renderer::render(const Scene & scene, const Timer & timer)
   glClear(GL_DEPTH_BUFFER_BIT);
   glClear(GL_COLOR_BUFFER_BIT);
 
+  if (ro.drawWireframe) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
   expectNoErrors("Clear prior to render");
 
-  size_t materialIndex = scene.objects[0].materialIndex();
+  expect("there should be objects to draw", !scene.objects.empty());
+  size_t materialIndex = scene.objects[0]->materialIndex();
 
   // Pass constants
 
@@ -104,9 +109,14 @@ void dmp::Renderer::render(const Scene & scene, const Timer & timer)
 
   pc.lightColor[0] = scene.lights[0].color;
   pc.lightColor[1] = scene.lights[1].color;
+  pc.lightColor[2] = scene.lights[2].color;
+  pc.lightColor[3] = scene.lights[3].color;
   pc.lightDir[0] = scene.lights[0].M * scene.lights[0].dir;
   pc.lightDir[1] = scene.lights[1].M * scene.lights[1].dir;
-  pc.numLights = 2;
+  pc.lightDir[2] = scene.lights[2].M * scene.lights[2].dir;
+  pc.lightDir[3] = scene.lights[3].M * scene.lights[3].dir;
+  pc.numLights = 4;
+  pc.drawMode = ro.drawNormals ? drawNormals : drawShaded;
 
   pc.P = mP;
   pc.invP = glm::inverse(pc.P);
@@ -152,15 +162,15 @@ void dmp::Renderer::render(const Scene & scene, const Timer & timer)
 
   for (size_t i = 0; i < scene.objects.size(); ++i)
     {
-      if (scene.objects[i].materialIndex() != materialIndex)
+      if (scene.objects[i]->materialIndex() != materialIndex)
         {
-          materialIndex = scene.objects[i].materialIndex();
+          materialIndex = scene.objects[i]->materialIndex();
           scene.materialConstants->bind(2, materialIndex);
         }
 
       glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_2D,
-                    scene.textures[scene.objects[i].textureIndex()]);
+                    scene.textures[scene.objects[i]->textureIndex()]);
       glUniform1i(glGetUniformLocation(mShaderProg, "tex"),
                   texUnitAsInt(GL_TEXTURE0));
 
@@ -169,8 +179,9 @@ void dmp::Renderer::render(const Scene & scene, const Timer & timer)
 
       expectNoErrors("Set uniforms");
 
-      scene.objects[i].bind();
-      scene.objects[i].draw();
+      scene.objects[i]->bind();
+      scene.objects[i]->draw();
     }
 
+  if (ro.drawWireframe) glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }

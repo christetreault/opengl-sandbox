@@ -3,5 +3,4 @@ sandbox
 *.d
 *~
 *#
-buildMode
 .clang_complete

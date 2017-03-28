@@ -2,12 +2,15 @@
 #define DMP_SCENE_GRAPH_HPP
 
 #include <boost/variant.hpp>
+#include <boost/optional.hpp>
 #include <vector>
 #include <functional>
 #include <glm/glm.hpp>
 #include <memory>
 #include "Object.hpp"
 #include "Camera.hpp"
+#include <glm/gtc/quaternion.hpp>
+
 
 namespace dmp
 {
@@ -46,31 +49,39 @@ namespace dmp
   {
   public:
     Container() = delete;
-    Container(Object & obj) : mValue(obj) {}
+    Container(Object obj) : mValue(obj) {}
     Container(CameraPos & cam) : mValue(cam) {}
     Container(CameraFocus & cam) : mValue(cam) {}
     Container(Light & lit) : mValue(lit) {}
-
+    boost::variant<Object, CameraPos &, CameraFocus &, Light &> mValue;
   private:
     void updateImpl(float deltaT, glm::mat4 M, bool dirty) override;
-    boost::variant<Object &, CameraPos &, CameraFocus &, Light &> mValue;
+
   };
 
-  static auto noTransform = [] (glm::mat4 &, float) {return false;};
+  static auto noTransform = [] (glm::mat4 &, glm::quat &, float)
+  {
+    boost::optional<glm::mat4> res;
+    return res;
+  };
+
+  typedef std::function<boost::optional<glm::mat4>(glm::mat4 &,
+                                                   glm::quat &,
+                                                   float)> TransformFn;
 
   class Transform : public Node
   {
   public:
-    // CONTRACT: If the update function does not make a change, then it
-    // MUST return false. If it makes a change, then it MUST return true.
-    std::function<bool(glm::mat4 &, float)> mUpdateFn = noTransform;
-    glm::mat4 mTransform;
+    TransformFn mUpdateFn = noTransform;
+    glm::mat4 mTransformResult;
+    glm::mat4 mMatrixTransformState;
+    glm::quat mQuatRotationState;
     std::unique_ptr<Node> mChild = nullptr;
 
-    Container * insert(Object & o);
-    Container * insert(Light & l);
-    Container * insert(CameraPos & c);
-    Container * insert(CameraFocus & c);
+    Object * insert(Object o);
+    Light * insert(Light & l);
+    CameraPos * insert(CameraPos & c);
+    CameraFocus * insert(CameraFocus & c);
     Node * insert(std::unique_ptr<Node> & n);
     Transform * insert(std::unique_ptr<Transform> & t);
     Branch * insert(std::unique_ptr<Branch> & b);
@@ -78,18 +89,13 @@ namespace dmp
 
     Transform * transform();
     Transform * transform(glm::mat4);
-    Transform * transform(std::function<bool(glm::mat4 &, float)>);
-    Transform * transform(glm::mat4, std::function<bool(glm::mat4 &, float)>);
+    Transform * transform(TransformFn);
+    Transform * transform(glm::quat, TransformFn);
+    Transform * transform(glm::mat4, TransformFn);
+    Transform * transform(glm::quat, glm::mat4, TransformFn);
     Branch * branch();
   private:
-    void updateImpl(float deltaT, glm::mat4 M, bool inDirty) override
-    {
-      // If outDirty == false, then it must be the case that mTransform is not
-      // changed.
-      bool outDirty = mUpdateFn(mTransform, deltaT) | inDirty;
-      glm::mat4 outM = M * mTransform;
-      if (mChild) mChild->update(deltaT, outM, outDirty);
-    }
+    void updateImpl(float deltaT, glm::mat4 M, bool inDirty) override;
   };
 
   class Branch : public Node
@@ -101,21 +107,24 @@ namespace dmp
     Transform * insert(std::unique_ptr<Transform> & t);
     Branch * insert(std::unique_ptr<Branch> & b);
     Container * insert(std::unique_ptr<Container> & c);
-    Container * insert(Object & o);
-    Container * insert(Light & l);
-    Container * insert(CameraPos & c);
-    Container * insert(CameraFocus & c);
+    Object * insert(Object o);
+    Light * insert(Light & l);
+    CameraPos * insert(CameraPos & c);
+    CameraFocus * insert(CameraFocus & c);
 
     Transform * transform();
     Transform * transform(glm::mat4);
-    Transform * transform(std::function<bool(glm::mat4 &, float)>);
-    Transform * transform(glm::mat4, std::function<bool(glm::mat4 &, float)>);
+    Transform * transform(TransformFn);
+    Transform * transform(glm::quat, TransformFn);
+    Transform * transform(glm::mat4, TransformFn);
+    Transform * transform(glm::quat, glm::mat4, TransformFn);
   private:
     void updateImpl(float deltaT, glm::mat4 M, bool dirty) override
     {
       for (auto & curr : mChildren)
         {
-          curr->update(deltaT, M, dirty);
+          expect("branch not null", curr);
+          if (curr) curr->update(deltaT, M, dirty);
         }
     }
   };
