@@ -37,7 +37,7 @@ PREFIX_RENDERER_CPP_FILES = $(addprefix Renderer/,$(RENDERER_CPP_FILES))
 # Scene Sources
 # ------------------------------------------------------------------------------
 
-SCENE_CPP_FILES = Camera.cpp Graph.cpp Object.cpp Skybox.cpp
+SCENE_CPP_FILES = Camera.cpp Graph.cpp Object.cpp Skybox.cpp Overlay.cpp
 PREFIX_SCENE_CPP_FILES = $(addprefix Scene/,$(SCENE_CPP_FILES) \
 $(PREFIX_SCENE_MODEL_CPP_FILES)
 
