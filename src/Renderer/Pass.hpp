@@ -33,13 +33,16 @@ namespace dmp
     float deltaT;
     float totalT;
 
+    float viewportWidth;
+    float viewportHeight;
+
     static size_t std140Size()
     {
       return dmp::std140PadStruct((std140VecArraySize<float, 4, maxLights>() * 2) +
                                   (std140VecSize<unsigned int, 4>()) +
                                   (std140MatSize<float, 4, 4>() * 6) +
                                   (std140VecSize<float, 4>()) +
-                                  (std140ScalarSize<float>() * 4));
+                                  (std140ScalarSize<float>() * 6));
     }
 
     operator GLvoid *() {return (GLvoid *) this;}

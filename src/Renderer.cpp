@@ -12,8 +12,7 @@
 #include <glm/gtx/string_cast.hpp>
 
 dmp::Renderer::Renderer(GLsizei width,
-                        GLsizei height,
-                        const std::string shaderName)
+                        GLsizei height)
 {
   initRenderer();
   ifDebug(std::cerr
@@ -24,19 +23,25 @@ dmp::Renderer::Renderer(GLsizei width,
           << "Supported GLSL version: "
           << (char *)glGetString(GL_VERSION)
           << std::endl);
-  loadShaders(shaderName);
+  loadShaders(basicShader, mShaderProg);
+  loadShaders(overlayShader, mOverlayShaderProg);
+  loadShaders(overlayPickingShader, mOverlayPickingShaderProg);
+
   initPassConstants();
   resize(width, height);
+  mWidth = width;
+  mHeight = height;
 }
 
-void dmp::Renderer::loadShaders(const std::string shaderName)
+void dmp::Renderer::loadShaders(const std::string shaderName,
+                                Shader & shaderProg)
 {
   auto vertName = shaderName + std::string(".vert");
   auto fragName = shaderName + std::string(".frag");
 
-  mShaderProg.initShader(vertName.c_str(),
-                         nullptr, nullptr, nullptr,
-                         fragName.c_str());
+  shaderProg.initShader(vertName.c_str(),
+                        nullptr, nullptr, nullptr,
+                        fragName.c_str());
 }
 
 void dmp::Renderer::initRenderer()
@@ -59,11 +64,11 @@ void dmp::Renderer::initRenderer()
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LEQUAL);
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-  //glEnable(GL_CULL_FACE);
-  //glCullFace(GL_BACK);
 
   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
   glEnable(GL_PROGRAM_POINT_SIZE);
+  glEnable (GL_BLEND);
+  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   expectNoErrors("init renderer");
 }
@@ -130,6 +135,9 @@ void dmp::Renderer::render(const Scene & scene,
   pc.deltaT = timer.deltaTime();
   pc.totalT = timer.time();
 
+  pc.viewportWidth = (float) mWidth;
+  pc.viewportHeight = (float) mHeight;
+
   mPassConstants->update(0, pc);
 
   GLuint pcIdx = glGetUniformBlockIndex(mShaderProg, "PassConstants");
@@ -184,4 +192,77 @@ void dmp::Renderer::render(const Scene & scene,
     }
 
   if (ro.drawWireframe) glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+  if (!ro.drawOverlays) return;
+
+  // Now draw overlays
+
+  pcIdx = glGetUniformBlockIndex(mOverlayShaderProg, "PassConstants");
+  glUniformBlockBinding(mOverlayShaderProg, pcIdx, 1);
+  mPassConstants->bind(1, 0);
+
+  ocIdx = glGetUniformBlockIndex(mOverlayShaderProg, "OverlayConstants");
+  glUniformBlockBinding(mOverlayShaderProg, ocIdx, 2);
+
+  glUseProgram(mOverlayShaderProg);
+
+  for (size_t i = 0; i < scene.overlays.size(); ++i)
+    {
+      glActiveTexture(GL_TEXTURE0);
+      glBindTexture(GL_TEXTURE_2D, scene.overlays[i].getTexture());
+      glUniform1i(glGetUniformLocation(mOverlayShaderProg, "tex"),
+                  texUnitAsInt(GL_TEXTURE0));
+
+      scene.overlayConstants->bind(2, i);
+
+      expectNoErrors("Set Overlay uniforms");
+
+      scene.overlays[i].draw();
+    }
+}
+
+
+int dmp::Renderer::pick(const Scene & scene,
+                        const RenderOptions &,
+                        int x, int y)
+{
+  glClear(GL_DEPTH_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT);
+
+  expectNoErrors("Clear framebuffer");
+
+  GLuint pcIdx = glGetUniformBlockIndex(mOverlayPickingShaderProg,
+                                        "PassConstants");
+  glUniformBlockBinding(mOverlayPickingShaderProg, pcIdx, 1);
+  mPassConstants->bind(1, 0);
+
+  GLuint ocIdx = glGetUniformBlockIndex(mOverlayPickingShaderProg,
+                                        "OverlayConstants");
+  glUniformBlockBinding(mOverlayPickingShaderProg, ocIdx, 2);
+
+  glUseProgram(mOverlayPickingShaderProg);
+
+  for (size_t i = 0; i < scene.overlays.size(); ++i)
+    {
+      scene.overlayConstants->bind(2, i);
+
+      expectNoErrors("Set Overlay uniforms");
+
+      scene.overlays[i].draw();
+    }
+
+  expectNoErrors("Finished drawing picking colors");
+
+  unsigned char res[4];
+  GLint viewport[4];
+
+  glGetIntegerv(GL_VIEWPORT, viewport);
+  glReadPixels(x, viewport[3] - y,
+               1, 1,
+               GL_RGBA, GL_UNSIGNED_BYTE,
+               &res);
+
+  expectNoErrors("Read pixel data");
+
+  return static_cast<int>(res[0]);
 }

@@ -13,6 +13,7 @@ namespace dmp
   {
     bool drawWireframe = false;
     bool drawNormals = false;
+    bool drawOverlays = false;
   };
 
   class Renderer
@@ -25,21 +26,29 @@ namespace dmp
     Renderer & operator=(Renderer && other) = default;
     ~Renderer() = default;
 
-    Renderer(GLsizei width, GLsizei height, const std::string shaderFile);
+    Renderer(GLsizei width, GLsizei height);
     void resize(GLsizei width, GLsizei height);
 
     void render(const Scene & scene,
                 const Timer & timer,
                 const RenderOptions & ro);
+
+    int pick(const Scene & scene, const RenderOptions & ro, int x, int y);
   private:
     void initRenderer();
-    void loadShaders(const std::string shaderFile);
+    void loadShaders(const std::string shaderFile,
+                     Shader & shaderProg);
     void initPassConstants();
 
     glm::mat4 mP;
     Shader mShaderProg;
+    Shader mOverlayShaderProg;
+    Shader mOverlayPickingShaderProg;
 
     std::unique_ptr<UniformBuffer> mPassConstants;
+
+    GLsizei mWidth;
+    GLsizei mHeight;
   };
 
   // Opengl constants

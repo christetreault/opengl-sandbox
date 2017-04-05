@@ -27,8 +27,7 @@ dmp::Program::Program(int width, int height,
                       const char * title)
   : mWindow(width, height, title),
     mRenderer((GLsizei) mWindow.getFramebufferWidth(),
-              (GLsizei) mWindow.getFramebufferHeight(),
-              basicShader),
+              (GLsizei) mWindow.getFramebufferHeight()),
     mTimer()
 {
   mWindow.windowSizeFn = [&](GLFWwindow * w,
@@ -388,9 +387,7 @@ dmp::Program::Program(int width, int height,
   Keybind s(mWindow,
                [&](Keybind &)
                {
-                 mShowDynBox = !mShowDynBox;
-                 if (mShowDynBox) mDynamicBox->show();
-                 else mDynamicBox->hide();
+                 mRenderOptions.drawOverlays = !(mRenderOptions.drawOverlays);
                },
                GLFW_KEY_S);
 
@@ -417,6 +414,37 @@ dmp::Program::Program(int width, int height,
       if (res != mKeybinds.end())
         {
           res->fn(got);
+        }
+    };
+
+  mWindow.cursorPosFn = [&mMousePosX=mMousePosX,
+                         &mMousePosY=mMousePosY](GLFWwindow *,
+                                                 double x, double y)
+    {
+      mMousePosX = static_cast<int>(x);
+      mMousePosY = static_cast<int>(y);
+    };
+
+  mWindow.mouseButtonFn = [&mRenderer=mRenderer,
+                           &mScene=mScene,
+                           &mRenderOptions=mRenderOptions,
+                           &mOverlayCallbacks=mOverlayCallbacks,
+                           &mMousePosX=mMousePosX,
+                           &mMousePosY=mMousePosY](GLFWwindow *,
+                                                   int button,
+                                                   int action,
+                                                   int mods)
+    {
+      if (button == GLFW_MOUSE_BUTTON_LEFT)
+        {
+          if (action == GLFW_RELEASE)
+            {
+              int id = mRenderer.pick(mScene,
+                                      mRenderOptions,
+                                      mMousePosX,
+                                      mMousePosY);
+              if (id < 255) mOverlayCallbacks[id](id);
+            }
         }
     };
 }
@@ -484,6 +512,8 @@ void dmp::Program::buildScene(TransformFn cameraFn,
 
   std::string notex = "";
   mScene.textures.emplace_back(notex);
+  std::string someRandomTexture = skyBox[0];
+  mScene.textures.emplace_back(someRandomTexture);
 
   mScene.materials.push_back( // Ruby = 0
     {
@@ -629,6 +659,34 @@ void dmp::Program::buildScene(TransformFn cameraFn,
 
   mScene.skybox = std::make_unique<Skybox>(sb);
 
+  mScene.overlays.emplace_back(-0.75f, -0.8f,
+                               1.5f, 0.2f,
+                               registerOverlayCallback([](int selectedID){std::cerr << "Callback 0: selected: " << selectedID << std::endl;}),
+                               mScene.textures[1]);
+
+  mScene.overlays.emplace_back(-0.5f, -0.75f,
+                               1.0f, 0.2f,
+                               //registerOverlayCallback([](int selectedID){std::cerr << "Callback 1: selected: " << selectedID << std::endl;}),
+                               mScene.textures[1]);
+
+  mScene.overlays.emplace_back(-0.25f, -0.7f,
+                               0.5f, 0.2f,
+                               registerOverlayCallback([](int selectedID){std::cerr << "Callback 2: selected: " << selectedID << std::endl;}),
+                               mScene.textures[1]);
+
+  mScene.overlayConstants
+    = std::make_unique<UniformBuffer>(mScene.overlays.size(),
+                                      OverlayConstants::std140Size());
+
   Object::sortByMaterial(mScene.objects);
   mScene.graph->update(0.0f, glm::mat4(), true);
+}
+
+int dmp::Program::registerOverlayCallback(OverlayCallback cb)
+{
+  expect("Less than 255 overlay callbacks", mNextFreeOverlayID < 255);
+  auto retval = mNextFreeOverlayID;
+  ++mNextFreeOverlayID;
+  mOverlayCallbacks.push_back(cb);
+  return retval;
 }

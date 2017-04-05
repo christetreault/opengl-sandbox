@@ -17,7 +17,8 @@ namespace dmp
 
   static const char * const basicShader = "res/shaders/basic";
   static const char * const skyboxShader = "res/shaders/skybox";
-  static const char * const channelShader = "res/shaders/channel";
+  static const char * const overlayShader = "res/shaders/overlay";
+  static const char * const overlayPickingShader = "res/shaders/overlayPicking";
 
   static const char * const skyBox[6] = {
     "res/textures/skyRight.tga",

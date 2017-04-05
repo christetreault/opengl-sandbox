@@ -27,6 +27,9 @@ layout (std140) uniform PassConstants
   float farZ;
   float deltaT;
   float totalT;
+
+  float viewportWidth;
+  float viewportHeight;
 };
 
 layout (std140) uniform MaterialConstants

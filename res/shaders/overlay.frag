@@ -1,6 +1,8 @@
-#version 410 core
+#version 410
 
-layout (location = 0) in vec3 positionToVert;
+in vec2 texCoordToFrag;
+
+out vec4 outColor;
 
 layout (std140) uniform PassConstants
 {
@@ -8,6 +10,7 @@ layout (std140) uniform PassConstants
   vec4 lightDir[8];
 
   uint numLights;
+  uint drawMode;
 
   mat4 P;
   mat4 invP;
@@ -27,11 +30,14 @@ layout (std140) uniform PassConstants
   float viewportHeight;
 };
 
-out vec3 texCoordsToFrag;
+layout (std140) uniform OverlayConstants
+{
+  float overlayID;
+};
+
+uniform sampler2D tex;
 
 void main()
 {
-  gl_Position = P * mat4(mat3(V)) * vec4(positionToVert,
-                                         1.0);
-  texCoordsToFrag = positionToVert;
+  outColor = texture(tex, texCoordToFrag);
 }

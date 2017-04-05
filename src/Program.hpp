@@ -147,6 +147,14 @@ namespace dmp
 
     Object * mDynamicBox = nullptr;
     bool mShowDynBox = true;
+
+    int mMousePosX = 0;
+    int mMousePosY = 0;
+
+    typedef std::function<void(int selectedID)> OverlayCallback;
+    int registerOverlayCallback(OverlayCallback cb);
+    int mNextFreeOverlayID = 0;
+    std::vector<OverlayCallback> mOverlayCallbacks;
   };
 }
 

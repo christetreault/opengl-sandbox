@@ -10,6 +10,7 @@
 #include "Scene/Skybox.hpp"
 #include "Renderer/UniformBuffer.hpp"
 #include "Renderer/Texture.hpp"
+#include "Renderer/Overlay.hpp"
 
 namespace dmp
 {
@@ -24,6 +25,8 @@ namespace dmp
     std::unique_ptr<UniformBuffer> objectConstants;
     std::unique_ptr<Branch> graph;
     std::unique_ptr<Skybox> skybox;
+    std::vector<Overlay> overlays;
+    std::unique_ptr<UniformBuffer> overlayConstants;
 
     void update(float deltaT);
     void free();

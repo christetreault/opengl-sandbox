@@ -52,7 +52,6 @@ dmp::Object::Object(std::vector<ObjectVertex> verts,
 void dmp::Object::initObject(std::vector<ObjectVertex> * verts,
                              std::vector<GLuint> * idxs)
 {
-  clearBindingMats();
   glGenVertexArrays(1,&mVAO);
   glGenBuffers(1, &mVBO);
   if (mHasIndices) glGenBuffers(1, &mEBO);
@@ -140,26 +139,6 @@ dmp::ObjectConstants dmp::Object::getObjectConstants() const
   return retVal;
 }
 
-void dmp::Object::tellBindingMats(const std::vector<glm::mat4> & mats)
-{
-  clearBindingMats();
-
-  mBindingMats.reserve(mats.size());
-
-  for (const auto & curr : mats)
-    {
-      mBindingMats.push_back(curr);
-    }
-
-  mDirty = true;
-}
-
-void dmp::Object::clearBindingMats()
-{
-  mBindingMats.clear();
-  mBindingMats.resize(0);
-}
-
 void dmp::Object::draw() const
 {
   expect("Object valid", mValid);
@@ -177,7 +156,6 @@ void dmp::Object::draw() const
                    0,
                    drawCount);
     }
-  glCullFace(GL_BACK);
   expectNoErrors("Draw object");
 }
 

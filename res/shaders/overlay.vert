@@ -1,13 +1,14 @@
-#version 410 core
+#version 410
 
-layout (location = 0) in vec3 positionToVert;
+layout (location = 0) in vec2 posToVert;
+layout (location = 1) in vec2 texCoordToVert;
 
 layout (std140) uniform PassConstants
 {
   vec4 lightColor[8]; // maxLights = 8
   vec4 lightDir[8];
-
   uint numLights;
+  uint drawMode;
 
   mat4 P;
   mat4 invP;
@@ -27,11 +28,11 @@ layout (std140) uniform PassConstants
   float viewportHeight;
 };
 
-out vec3 texCoordsToFrag;
+out vec2 texCoordToFrag;
 
 void main()
 {
-  gl_Position = P * mat4(mat3(V)) * vec4(positionToVert,
-                                         1.0);
-  texCoordsToFrag = positionToVert;
+  gl_Position = vec4(posToVert, -1.0f, 1.0f);
+
+  texCoordToFrag = texCoordToVert;
 }

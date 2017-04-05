@@ -21,6 +21,14 @@ void dmp::Scene::update(float deltaT)
           objects[i]->setClean();
         }
     }
+  for (size_t i = 0; i < overlays.size(); ++i)
+    {
+      if (overlays[i].isDirty())
+        {
+          overlayConstants->update(i, overlays[i].getOverlayConstants());
+          overlays[i].setClean();
+        }
+    }
 
   for (auto & curr : cameras)
     {
@@ -33,6 +41,11 @@ void dmp::Scene::free()
   for (auto & curr : objects)
     {
       curr->freeObject();
+    }
+
+  for (auto & curr : overlays)
+    {
+      curr.freeOverlay();
     }
 
   for (auto & curr : textures)

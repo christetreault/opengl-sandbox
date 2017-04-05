@@ -10,7 +10,7 @@ namespace dmp
   class Texture
   {
   public:
-    Texture() = delete;
+    Texture() = default;
     Texture(const Texture &) = delete;
     Texture & operator=(const Texture &) = delete;
     Texture(Texture &&) = default;

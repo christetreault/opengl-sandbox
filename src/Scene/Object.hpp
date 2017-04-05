@@ -98,8 +98,6 @@ namespace dmp
     void draw() const;
 
     ObjectConstants getObjectConstants() const;
-    void tellBindingMats(const std::vector<glm::mat4> & mats);
-    void clearBindingMats();
 
     glm::mat4 getM() const {return mM;}
 
@@ -146,8 +144,6 @@ namespace dmp
 
     GLsizei drawCount;
     bool mVisible = true;
-
-    std::vector<glm::mat4> mBindingMats;
 
     GLenum mDrawMode = GL_STATIC_DRAW;
   };
