@@ -46,7 +46,7 @@ $(PREFIX_SCENE_MODEL_CPP_FILES)
 # ------------------------------------------------------------------------------
 
 CPP_FILES = main.cpp Program.cpp Renderer.cpp \
-	    Scene.cpp Timer.cpp Window.cpp
+	    Scene.cpp Timer.cpp Window.cpp Image.cpp
 PREFIX_CPP_FILES = $(addprefix src/$(CPP_FILES) $(PREFIX_SCENE_CPP_FILES) \
 $(PREFIX_RENDERER_CPP_FILES) $(PREFIX_EXTERNAL_CPP_FILES))
 

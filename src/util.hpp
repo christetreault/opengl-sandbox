@@ -13,6 +13,7 @@
 #include <map>
 #include <boost/assert.hpp>
 #include <glm/gtx/string_cast.hpp>
+#include <chrono>
 
 // Exectue a statement IFF built in release mode (NDEBUG is definend)
 // define ifRelease
@@ -317,6 +318,12 @@ namespace dmp
       }
 
     // Union should be complete at this point
+  }
+
+  inline auto unixTimestamp()
+  {
+    using namespace std::chrono;
+    return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
   }
 }
 

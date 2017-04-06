@@ -4,6 +4,7 @@
 #include <string>
 #include <GL/glew.h>
 #include "../util.hpp"
+#include "../Image.hpp"
 
 namespace dmp
 {
@@ -32,9 +33,14 @@ namespace dmp
     }
 
   private:
-    void initTexture(std::string &);
+    void initTexture(const std::string &);
+
+    Image mImage;
     GLuint mTexId = 0;
     bool mValid = false;
+    size_t mWidth;
+    size_t mHeight;
+    size_t mComponents;
   };
 
   inline GLuint texUnitAsInt(GLenum t) {return t - GL_TEXTURE0;}

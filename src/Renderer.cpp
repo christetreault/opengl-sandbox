@@ -6,6 +6,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "util.hpp"
 #include "config.hpp"
+#include "Image.hpp"
 #include "Renderer/Pass.hpp"
 
 #include <iostream>
@@ -253,16 +254,7 @@ int dmp::Renderer::pick(const Scene & scene,
 
   expectNoErrors("Finished drawing picking colors");
 
-  unsigned char res[4];
-  GLint viewport[4];
+  Image pix(x, y, 1, 1);
 
-  glGetIntegerv(GL_VIEWPORT, viewport);
-  glReadPixels(x, viewport[3] - y,
-               1, 1,
-               GL_RGBA, GL_UNSIGNED_BYTE,
-               &res);
-
-  expectNoErrors("Read pixel data");
-
-  return static_cast<int>(res[0]);
+  return static_cast<int>(pix.data[0]);
 }

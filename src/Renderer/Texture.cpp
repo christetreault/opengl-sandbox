@@ -1,10 +1,10 @@
 #include "Texture.hpp"
 
 #include "../util.hpp"
-#include "../ext/stb_image.h"
+
 #include <iostream>
 
-void dmp::Texture::initTexture(std::string & path)
+void dmp::Texture::initTexture(const std::string & path)
 {
   glGenTextures(1, &mTexId);
   expectNoErrors("gen texture");
@@ -20,56 +20,27 @@ void dmp::Texture::initTexture(std::string & path)
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   expectNoErrors("texture filtering");
 
-  int width, height, channels;
-  unsigned char noTex[4] =
+  if (path != "")
     {
-      (unsigned char) 0xFF,
-      (unsigned char) 0xFF,
-      (unsigned char) 0xFF,
-      (unsigned char) 0xFF
-    };
-
-  unsigned char * data;
-  if (path == "")
-    {
-      data = noTex;
-      width = 1;
-      height = 1;
-      channels = 4;
-    }
-  else
-    {
-      data = stbi_load(path.c_str(),
-                       &width,
-                       &height,
-                       &channels,
-                       4); // TODO: revisit this
+      mImage = Image(path);
     }
 
-  ifDebug(if (data == nullptr)
-            {
-              std::cerr << "Failed to load image: "
-                        << stbi_failure_reason()
-                        << std::endl;
-            });
-
-  expect("Load image file", data);
-
+  // TODO: gracefully handle the possibility that Image might not be RGBA
   glTexImage2D(GL_TEXTURE_2D,
                0, // generating mipmaps
-               GL_RGBA, // forced an alpha channel
-               width,
-               height,
+               GL_RGBA, // forced an alpha channel (TODO)
+               (GLsizei) mImage.width,
+               (GLsizei) mImage.height,
                0, // should always be zero because "legacy"
-               GL_RGBA,
+               GL_RGBA, // (TODO?)
                GL_UNSIGNED_BYTE,
-               data);
+               mImage.data.data());
+
   expectNoErrors("generate texture");
 
   glGenerateMipmap(GL_TEXTURE_2D);
   expectNoErrors("generate mipmaps");
 
-  if (path != "") stbi_image_free(data);
   glBindTexture(GL_TEXTURE_2D, 0);
 
   expectNoErrors("initialize Texture");
