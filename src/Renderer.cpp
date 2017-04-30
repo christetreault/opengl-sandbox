@@ -198,12 +198,22 @@ void dmp::Renderer::render(const Scene & scene,
 
   // Now draw overlays
 
+  expectNoErrors("Overlays pre");
+
   pcIdx = glGetUniformBlockIndex(mOverlayShaderProg, "PassConstants");
-  glUniformBlockBinding(mOverlayShaderProg, pcIdx, 1);
-  mPassConstants->bind(1, 0);
+
+  if (pcIdx != GL_INVALID_INDEX)
+    {
+      glUniformBlockBinding(mOverlayShaderProg, pcIdx, 1);
+      mPassConstants->bind(1, 0);
+    }
 
   ocIdx = glGetUniformBlockIndex(mOverlayShaderProg, "OverlayConstants");
-  glUniformBlockBinding(mOverlayShaderProg, ocIdx, 2);
+
+  if (ocIdx != GL_INVALID_INDEX)
+    {
+      glUniformBlockBinding(mOverlayShaderProg, ocIdx, 2);
+    }
 
   glUseProgram(mOverlayShaderProg);
 
@@ -234,12 +244,20 @@ int dmp::Renderer::pick(const Scene & scene,
 
   GLuint pcIdx = glGetUniformBlockIndex(mOverlayPickingShaderProg,
                                         "PassConstants");
-  glUniformBlockBinding(mOverlayPickingShaderProg, pcIdx, 1);
-  mPassConstants->bind(1, 0);
+
+  if (pcIdx != GL_INVALID_INDEX)
+    {
+      glUniformBlockBinding(mOverlayPickingShaderProg, pcIdx, 1);
+      mPassConstants->bind(1, 0);
+    }
 
   GLuint ocIdx = glGetUniformBlockIndex(mOverlayPickingShaderProg,
                                         "OverlayConstants");
-  glUniformBlockBinding(mOverlayPickingShaderProg, ocIdx, 2);
+
+  if (ocIdx != GL_INVALID_INDEX)
+    {
+      glUniformBlockBinding(mOverlayPickingShaderProg, ocIdx, 2);
+    }
 
   glUseProgram(mOverlayPickingShaderProg);
 
